@@ -31,41 +31,92 @@ variable "azure_sql_server_credentials" {
 }
 
 variable "azure_acr" {
-  description = "Array of acr module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of acr resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    sku = optional(string, "Premium")
+    public_network_access_enabled = optional(bool, false)
+    tags = optional(map(string), {
+
+  })
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_acr : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_acr : try(item.key, "")])) == length(var.azure_acr)
+    condition = alltrue([for item in var.azure_acr : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_acr : item.key])) == length(var.azure_acr)
     error_message = "Each azure_acr item must have a unique non-empty key."
   }
 }
 
 variable "azure_aks" {
-  description = "Array of aks module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of aks resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    tags = optional(map(string), {
+
+  })
+    dns_prefix = string
+    kubernetes_version = optional(string, null)
+    private_cluster_enabled = optional(bool, true)
+    automatic_upgrade_channel = optional(string, "patch")
+    sku_tier = optional(string, "Standard")
+    node_vm_size = optional(string, "Standard_D4s_v5")
+    node_count = optional(number, 3)
+    min_count = optional(number, 3)
+    max_count = optional(number, 10)
+    subnet_id = optional(string, null)
+    subnet_key = optional(string)
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_aks : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_aks : try(item.key, "")])) == length(var.azure_aks)
+    condition = alltrue([for item in var.azure_aks : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_aks : item.key])) == length(var.azure_aks)
     error_message = "Each azure_aks item must have a unique non-empty key."
   }
 }
 
 variable "azure_app_configuration" {
-  description = "Array of app_configuration module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of app_configuration resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    tags = optional(map(string), {
+
+  })
+    sku = optional(string, "standard")
+    public_network_access = optional(string, "Disabled")
+    configuration = optional(map(string), {})
+    label = optional(string, null)
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_app_configuration : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_app_configuration : try(item.key, "")])) == length(var.azure_app_configuration)
+    condition = alltrue([for item in var.azure_app_configuration : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_app_configuration : item.key])) == length(var.azure_app_configuration)
     error_message = "Each azure_app_configuration item must have a unique non-empty key."
   }
 }
 
 variable "azure_app_service" {
-  description = "Array of app_service module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of app_service resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    tags = optional(map(string), {
+
+  })
+    os_type = optional(string, "Linux")
+    sku_name = optional(string, "P1v3")
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_app_service : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_app_service : try(item.key, "")])) == length(var.azure_app_service)
+    condition = alltrue([for item in var.azure_app_service : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_app_service : item.key])) == length(var.azure_app_service)
     error_message = "Each azure_app_service item must have a unique non-empty key."
   }
 }
