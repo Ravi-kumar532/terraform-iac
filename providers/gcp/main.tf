@@ -233,34 +233,82 @@ module "gcp_workflows" {
   depends_on = [module.gcp_project]
 }
 
-output "gcp_app_engine_outputs" { description = "Outputs from all app_engine module instances." value = module.gcp_app_engine }
+output "gcp_app_engine_outputs" {
+  description = "Outputs from all app_engine module instances."
+  value       = module.gcp_app_engine
+}
 
-output "gcp_artifact_registry_outputs" { description = "Outputs from all artifact_registry module instances." value = module.gcp_artifact_registry }
+output "gcp_artifact_registry_outputs" {
+  description = "Outputs from all artifact_registry module instances."
+  value       = module.gcp_artifact_registry
+}
 
-output "gcp_cloud_functions_outputs" { description = "Outputs from all cloud_functions module instances." value = module.gcp_cloud_functions }
+output "gcp_cloud_functions_outputs" {
+  description = "Outputs from all cloud_functions module instances."
+  value       = module.gcp_cloud_functions
+}
 
-output "gcp_cloud_run_outputs" { description = "Outputs from all cloud_run module instances." value = module.gcp_cloud_run }
+output "gcp_cloud_run_outputs" {
+  description = "Outputs from all cloud_run module instances."
+  value       = module.gcp_cloud_run
+}
 
-output "gcp_cloud_sql_outputs" { description = "Outputs from all cloud_sql module instances." value = module.gcp_cloud_sql }
+output "gcp_cloud_sql_outputs" {
+  description = "Outputs from all cloud_sql module instances."
+  value       = module.gcp_cloud_sql
+}
 
-output "gcp_cloud_sql_database_outputs" { description = "Outputs from all cloud_sql_database module instances." value = module.gcp_cloud_sql_database }
+output "gcp_cloud_sql_database_outputs" {
+  description = "Outputs from all cloud_sql_database module instances."
+  value       = module.gcp_cloud_sql_database
+}
 
-output "gcp_cloud_storage_outputs" { description = "Outputs from all cloud_storage module instances." value = module.gcp_cloud_storage }
+output "gcp_cloud_storage_outputs" {
+  description = "Outputs from all cloud_storage module instances."
+  value       = module.gcp_cloud_storage
+}
 
-output "gcp_eventarc_outputs" { description = "Outputs from all eventarc module instances." value = module.gcp_eventarc }
+output "gcp_eventarc_outputs" {
+  description = "Outputs from all eventarc module instances."
+  value       = module.gcp_eventarc
+}
 
-output "gcp_firestore_outputs" { description = "Outputs from all firestore module instances." value = module.gcp_firestore }
+output "gcp_firestore_outputs" {
+  description = "Outputs from all firestore module instances."
+  value       = module.gcp_firestore
+}
 
-output "gcp_gke_outputs" { description = "Outputs from all gke module instances." value = module.gcp_gke }
+output "gcp_gke_outputs" {
+  description = "Outputs from all gke module instances."
+  value       = module.gcp_gke
+}
 
-output "gcp_monitoring_outputs" { description = "Outputs from all monitoring module instances." value = module.gcp_monitoring }
+output "gcp_monitoring_outputs" {
+  description = "Outputs from all monitoring module instances."
+  value       = module.gcp_monitoring
+}
 
-output "gcp_project_outputs" { description = "Outputs from all project module instances." value = module.gcp_project }
+output "gcp_project_outputs" {
+  description = "Outputs from all project module instances."
+  value       = module.gcp_project
+}
 
-output "gcp_pubsub_outputs" { description = "Outputs from all pubsub module instances." value = module.gcp_pubsub }
+output "gcp_pubsub_outputs" {
+  description = "Outputs from all pubsub module instances."
+  value       = module.gcp_pubsub
+}
 
-output "gcp_subnet_outputs" { description = "Outputs from all subnet module instances." value = module.gcp_subnet }
+output "gcp_subnet_outputs" {
+  description = "Outputs from all subnet module instances."
+  value       = module.gcp_subnet
+}
 
-output "gcp_vpc_outputs" { description = "Outputs from all vpc module instances." value = module.gcp_vpc }
+output "gcp_vpc_outputs" {
+  description = "Outputs from all vpc module instances."
+  value       = module.gcp_vpc
+}
 
-output "gcp_workflows_outputs" { description = "Outputs from all workflows module instances." value = module.gcp_workflows }
+output "gcp_workflows_outputs" {
+  description = "Outputs from all workflows module instances."
+  value       = module.gcp_workflows
+}
