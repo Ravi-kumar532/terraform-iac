@@ -221,21 +221,36 @@ variable "azure_logic_app" {
 }
 
 variable "azure_monitoring" {
-  description = "Array of monitoring module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of monitoring resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    aks_cluster_id = string
+    tags = optional(map(string), {})
+    aks_key = optional(string)
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_monitoring : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_monitoring : try(item.key, "")])) == length(var.azure_monitoring)
+    condition = alltrue([for item in var.azure_monitoring : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_monitoring : item.key])) == length(var.azure_monitoring)
     error_message = "Each azure_monitoring item must have a unique non-empty key."
   }
 }
 
 variable "azure_resource_group" {
-  description = "Array of resource_group module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of resource_group resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    location = string
+    tags = optional(map(string), {
+
+  })
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_resource_group : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_resource_group : try(item.key, "")])) == length(var.azure_resource_group)
+    condition = alltrue([for item in var.azure_resource_group : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_resource_group : item.key])) == length(var.azure_resource_group)
     error_message = "Each azure_resource_group item must have a unique non-empty key."
   }
 }
@@ -268,21 +283,55 @@ variable "azure_sql_database" {
 }
 
 variable "azure_sql_server" {
-  description = "Array of sql_server module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of sql_server resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    tags = optional(map(string), {
+
+  })
+    sql_server_version = optional(string, "12.0")
+    administrator_login = string
+    administrator_login_password = string
+    azuread_admin_login = string
+    azuread_admin_object_id = string
+    tenant_id = string
+    public_network_access_enabled = optional(bool, false)
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_sql_server : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_sql_server : try(item.key, "")])) == length(var.azure_sql_server)
+    condition = alltrue([for item in var.azure_sql_server : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_sql_server : item.key])) == length(var.azure_sql_server)
     error_message = "Each azure_sql_server item must have a unique non-empty key."
   }
 }
 
 variable "azure_storage_account" {
-  description = "Array of storage_account module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of storage_account resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    tags = optional(map(string), {
+
+  })
+    account_tier = optional(string, "Standard")
+    replication_type = optional(string, "ZRS")
+    public_network_access_enabled = optional(bool, false)
+    containers = optional(map(string), {})
+    blobs = optional(map(object({
+    name         = string
+    container    = string
+    source       = string
+    content_type = optional(string)
+    type         = optional(string, "Block")
+  })), {})
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_storage_account : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_storage_account : try(item.key, "")])) == length(var.azure_storage_account)
+    condition = alltrue([for item in var.azure_storage_account : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_storage_account : item.key])) == length(var.azure_storage_account)
     error_message = "Each azure_storage_account item must have a unique non-empty key."
   }
 }
