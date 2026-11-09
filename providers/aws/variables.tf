@@ -93,7 +93,7 @@ variable "aws_eks" {
     name = string
     cluster_role_arn = string
     kubernetes_version = optional(string, null)
-    subnet_ids = optional(list(string), null)
+    subnet_ids = optional(list(string))
     endpoint_public_access = optional(bool, false)
     security_group_ids = optional(list(string), [])
     kms_key_arn = string
@@ -221,7 +221,7 @@ variable "aws_rds_mysql" {
     kms_key_arn = string
     multi_az = optional(bool, true)
     backup_retention_days = optional(number, 14)
-    subnet_ids = optional(list(string), null)
+    subnet_ids = optional(list(string))
     security_group_ids = list(string)
     subnet_keys = optional(list(string))
   }))
@@ -247,7 +247,7 @@ variable "aws_rds_sql_server" {
     kms_key_arn = string
     multi_az = optional(bool, true)
     backup_retention_days = optional(number, 14)
-    subnet_ids = optional(list(string), null)
+    subnet_ids = optional(list(string))
     security_group_ids = list(string)
     subnet_keys = optional(list(string))
   }))
@@ -340,7 +340,7 @@ variable "aws_subnet" {
   type = list(object({
     key = string
     name = string
-    vpc_id = optional(string, null)
+    vpc_id = optional(string)
     cidr_block = string
     availability_zone = string
     tags = optional(map(string), {
