@@ -257,6 +257,34 @@ variable "azure_resource_group" {
 
 
 
+variable "azure_sql_database" {
+  description = "Repeatable SQL databases. Stable keys are Terraform state identities; server_key links a database to a server in this root."
+  type = list(object({
+    key                   = string
+    name                  = string
+    server_id             = optional(string)
+    server_key            = optional(string)
+    sku_name              = optional(string, "GP_S_Gen5_2")
+    zone_redundant         = optional(bool, true)
+    storage_account_type  = optional(string, "Geo")
+    min_capacity          = optional(number, 0.5)
+    backup_retention_days = optional(number, 35)
+    tags                  = optional(map(string), {})
+    prevent_destroy       = optional(bool, true)
+  }))
+  default = []
+  validation {
+    condition = alltrue([
+      for database in var.azure_sql_database :
+      length(trimspace(database.key)) > 0 &&
+      length(trimspace(database.name)) > 0 &&
+      (database.server_id != null || database.server_key != null)
+    ]) && length(distinct([for database in var.azure_sql_database : database.key])) == length(var.azure_sql_database)
+      && length(distinct([for database in var.azure_sql_database : lower("${coalesce(database.server_key, database.server_id, "missing")}:${database.name}")])) == length(var.azure_sql_database)
+    error_message = "Each SQL database requires a unique key, unique name per server, and either server_id or server_key."
+  }
+}
+
 variable "azure_sql_server" {
   description = "Azure SQL servers. Credentials are injected separately from Key Vault and keyed by this stable Terraform key."
   type = list(object({
