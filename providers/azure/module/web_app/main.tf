@@ -18,7 +18,8 @@ resource "azurerm_linux_web_app" "this" {
   tags                          = each.value.tags
 
   identity {
-    type = "SystemAssigned"
+    type         = length(each.value.identity_ids) > 0 ? "SystemAssigned, UserAssigned" : "SystemAssigned"
+    identity_ids = each.value.identity_ids
   }
 
   site_config {
