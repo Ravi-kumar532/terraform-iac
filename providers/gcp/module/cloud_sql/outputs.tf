@@ -7,3 +7,8 @@ output "connection_name" {
 output "private_ip_address" {
   value = google_sql_database_instance.this.private_ip_address
 }
+
+output "name" {
+  description = "Cloud SQL instance name for dependent database modules."
+  value       = google_sql_database_instance.this.name
+}
