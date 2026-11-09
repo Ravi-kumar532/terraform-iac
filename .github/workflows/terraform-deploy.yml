@@ -198,7 +198,7 @@ jobs:
 
       - name: Terraform destroy
         if: inputs.action == 'destroy'
-        run: terraform -chdir="providers/$CLOUD" destroy -input=false -auto-approve -no-color -var-file="$RUNNER_TEMP/terraform.tfvars.json"
+        run: terraform -chdir="providers/$CLOUD" destroy -input=false -auto-approve -no-color -var-file="$RUNNER_TEMP/$CLOUD-$TF_ENVIRONMENT.tfvars"
 
       - name: Remove temporary tfvars and plan
         if: always()
