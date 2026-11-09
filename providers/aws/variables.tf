@@ -109,7 +109,7 @@ variable "aws_eks" {
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.aws_eks : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.aws_eks : item.key] && alltrue([for item in var.aws_eks : (item.subnet_ids != null && length(item.subnet_ids) > 0) || (length(try(item.subnet_keys, [])) > 0 && alltrue([for subnet_key in item.subnet_keys : contains([for subnet in var.aws_subnet : subnet.key], subnet_key)])]))) == length(var.aws_eks)
+    condition = alltrue([for item in var.aws_eks : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.aws_eks : item.key] && alltrue([for item in var.aws_eks : (item.subnet_ids != null && length(item.subnet_ids) > 0) || (length(try(item.subnet_keys, [])) > 0 && alltrue([for subnet_key in try(item.subnet_keys, []) : contains([for subnet in var.aws_subnet : subnet.key], subnet_key)])]))) == length(var.aws_eks)
     error_message = "Each aws_eks item must have a unique non-empty key."
   }
 }
@@ -227,7 +227,7 @@ variable "aws_rds_mysql" {
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.aws_rds_mysql : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.aws_rds_mysql : item.key] && alltrue([for item in var.aws_rds_mysql : (item.subnet_ids != null && length(item.subnet_ids) > 0) || (length(try(item.subnet_keys, [])) > 0 && alltrue([for subnet_key in item.subnet_keys : contains([for subnet in var.aws_subnet : subnet.key], subnet_key)])]))) == length(var.aws_rds_mysql)
+    condition = alltrue([for item in var.aws_rds_mysql : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.aws_rds_mysql : item.key] && alltrue([for item in var.aws_rds_mysql : (item.subnet_ids != null && length(item.subnet_ids) > 0) || (length(try(item.subnet_keys, [])) > 0 && alltrue([for subnet_key in try(item.subnet_keys, []) : contains([for subnet in var.aws_subnet : subnet.key], subnet_key)])]))) == length(var.aws_rds_mysql)
     error_message = "Each aws_rds_mysql item must have a unique non-empty key."
   }
 }
@@ -253,7 +253,7 @@ variable "aws_rds_sql_server" {
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.aws_rds_sql_server : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.aws_rds_sql_server : item.key] && alltrue([for item in var.aws_rds_sql_server : (item.subnet_ids != null && length(item.subnet_ids) > 0) || (length(try(item.subnet_keys, [])) > 0 && alltrue([for subnet_key in item.subnet_keys : contains([for subnet in var.aws_subnet : subnet.key], subnet_key)])]))) == length(var.aws_rds_sql_server)
+    condition = alltrue([for item in var.aws_rds_sql_server : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.aws_rds_sql_server : item.key] && alltrue([for item in var.aws_rds_sql_server : (item.subnet_ids != null && length(item.subnet_ids) > 0) || (length(try(item.subnet_keys, [])) > 0 && alltrue([for subnet_key in try(item.subnet_keys, []) : contains([for subnet in var.aws_subnet : subnet.key], subnet_key)])]))) == length(var.aws_rds_sql_server)
     error_message = "Each aws_rds_sql_server item must have a unique non-empty key."
   }
 }
