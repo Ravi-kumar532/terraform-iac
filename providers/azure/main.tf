@@ -1,21 +1,59 @@
 locals {
   azure_common_tags = merge(var.common_tags, { Environment = var.environment })
-  azure_web_app_definitions = [
-    for app in var.azure_web_apps : {
-      key                           = app.key
-      name                          = app.name
-      resource_group_name           = app.resource_group_name
-      location                      = app.location
-      service_plan_id               = app.service_plan_id != null ? app.service_plan_id : module.azure_app_service[app.service_plan_key].id
-      public_network_access_enabled = try(app.public_network_access_enabled, false)
-      integration_subnet_id         = try(app.integration_subnet_id, null)
-      identity_ids                  = concat(try(app.identity_ids, []), [for identity_key in try(app.user_assigned_identity_keys, []) : module.azure_managed_identity[identity_key].id])
-      app_settings                  = try(app.app_settings, {})
-      tags                          = merge(local.azure_common_tags, try(app.tags, {}))
-      runtime                       = try(app.runtime, {})
-      prevent_destroy               = try(app.prevent_destroy, true)
-    }
-  ]
+
+  azure_web_app_definitions = concat(
+    [
+      for app in var.azure_web_apps : {
+        key                           = app.key
+        name                          = app.name
+        resource_group_name           = app.resource_group_name
+        location                      = app.location
+        service_plan_id               = app.service_plan_id != null ? app.service_plan_id : try(module.azure_app_service[app.service_plan_key].id, null)
+        public_network_access_enabled = app.public_network_access_enabled
+        integration_subnet_id         = app.integration_subnet_id
+        identity_ids                  = concat(app.identity_ids, [for identity_key in app.user_assigned_identity_keys : module.azure_managed_identity[identity_key].id])
+        app_settings                  = app.app_settings
+        tags                          = merge(local.azure_common_tags, app.tags)
+        runtime                       = app.runtime
+        prevent_destroy               = app.prevent_destroy
+      }
+    ],
+    [
+      for app_name in var.azure_web_app_names : {
+        key                           = app_name
+        name                          = app_name
+        resource_group_name           = var.azure_web_app_defaults.resource_group_name
+        location                      = var.azure_web_app_defaults.location
+        service_plan_id               = coalesce(try(var.azure_web_app_defaults.service_plan_id, null), try(module.azure_app_service[var.azure_web_app_defaults.service_plan_key].id, null))
+        public_network_access_enabled = var.azure_web_app_defaults.public_network_access_enabled
+        integration_subnet_id         = var.azure_web_app_defaults.integration_subnet_id
+        identity_ids                  = concat(var.azure_web_app_defaults.identity_ids, [for identity_key in var.azure_web_app_defaults.user_assigned_identity_keys : module.azure_managed_identity[identity_key].id])
+        app_settings                  = var.azure_web_app_defaults.app_settings
+        tags                          = merge(local.azure_common_tags, var.azure_web_app_defaults.tags)
+        runtime                       = var.azure_web_app_defaults.runtime
+        prevent_destroy               = var.azure_web_app_defaults.prevent_destroy
+      }
+    ]
+  )
+
+  azure_sql_database_definitions = concat(
+    var.azure_sql_database,
+    [
+      for database_name in var.azure_sql_database_names : {
+        key                   = database_name
+        name                  = database_name
+        server_id             = var.azure_sql_database_defaults.server_id
+        server_key            = var.azure_sql_database_defaults.server_key
+        sku_name              = var.azure_sql_database_defaults.sku_name
+        zone_redundant        = var.azure_sql_database_defaults.zone_redundant
+        storage_account_type  = var.azure_sql_database_defaults.storage_account_type
+        min_capacity          = var.azure_sql_database_defaults.min_capacity
+        backup_retention_days = var.azure_sql_database_defaults.backup_retention_days
+        tags                  = var.azure_sql_database_defaults.tags
+        prevent_destroy       = var.azure_sql_database_defaults.prevent_destroy
+      }
+    ]
+  )
 }
 
 module "azure_acr" {
@@ -160,7 +198,7 @@ module "azure_resource_group" {
 
 module "azure_sql_database" {
   source   = "./module/sql_database"
-  for_each = { for item in var.azure_sql_database : item.key => item }
+  for_each = { for item in local.azure_sql_database_definitions : item.key => item }
   name = try(each.value.name, null)
   server_id = each.value.server_id != null ? each.value.server_id : module.azure_sql_server[each.value.server_key].id
   sku_name = try(each.value.sku_name, null)
