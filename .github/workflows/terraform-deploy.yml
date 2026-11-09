@@ -53,7 +53,7 @@ jobs:
       TF_ENVIRONMENT: ${{ inputs.environment }}
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
-      TERRAFORM_INPUTS_JSON: ${{ secrets.TERRAFORM_INPUTS_JSON }}
+      TERRAFORM_TFVARS: ${{ secrets.TERRAFORM_TFVARS }}
       ARM_USE_OIDC: "true"
       ARM_USE_AZUREAD: "true"
       TF_VAR_environment: ${{ inputs.environment }}
@@ -122,14 +122,15 @@ jobs:
             printf 'TF_VAR_gcp_monitoring_credentials=%s\n' "$secret" >> "$GITHUB_ENV"
           fi
 
-      - name: Prepare protected environment inputs
+      - name: Prepare protected environment tfvars
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$TERRAFORM_INPUTS_JSON" || { echo "Set the environment secret TERRAFORM_INPUTS_JSON with non-secret infrastructure input arrays."; exit 1; }
-          printf '%s' "$TERRAFORM_INPUTS_JSON" | jq -e 'type == "object"' >/dev/null
-          printf '%s' "$TERRAFORM_INPUTS_JSON" > "$RUNNER_TEMP/terraform.tfvars.json"
-          chmod 600 "$RUNNER_TEMP/terraform.tfvars.json"
+          test -n "$TERRAFORM_TFVARS" || { echo "Set the environment secret TERRAFORM_TFVARS to the HCL contents of the selected environment tfvars file."; exit 1; }
+          input_file="$RUNNER_TEMP/$CLOUD-$TF_ENVIRONMENT.tfvars"
+          printf '%s' "$TERRAFORM_TFVARS" > "$input_file"
+          chmod 600 "$input_file"
+          echo "TF_VAR_environment=$TF_ENVIRONMENT" >> "$GITHUB_ENV"
           if [[ "$CLOUD" == "gcp" ]]; then echo "TF_VAR_region=${{ vars.GCP_REGION }}" >> "$GITHUB_ENV"; fi
 
       - name: Initialize remote state with environment-specific locking
@@ -180,7 +181,7 @@ jobs:
 
       - name: Terraform plan
         if: inputs.action == 'plan' || inputs.action == 'apply'
-        run: terraform -chdir="providers/$CLOUD" plan -input=false -no-color -var-file="$RUNNER_TEMP/terraform.tfvars.json" -out="$RUNNER_TEMP/terraform.tfplan"
+        run: terraform -chdir="providers/$CLOUD" plan -input=false -no-color -var-file="$RUNNER_TEMP/$CLOUD-$TF_ENVIRONMENT.tfvars" -out="$RUNNER_TEMP/terraform.tfplan"
 
       - name: Terraform apply saved plan
         if: inputs.action == 'apply'
