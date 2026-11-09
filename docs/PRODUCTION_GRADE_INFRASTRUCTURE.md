@@ -153,6 +153,20 @@ The names-array shorthand intentionally uses each resource name as its Terraform
 
 All AWS and GCP modules are also configured in their provider root `main.tf`. Each input variable is a list of objects with a stable `key`; use one item per independent resource. Dependencies can be supplied explicitly by IDs or through the supported `vpc_key`, `subnet_keys`, `instance_key`, and related reference fields in the root compositions. Database credentials are managed by AWS RDS Secrets Manager integration where supported. GCP monitoring credentials are supplied separately through the sensitive `gcp_monitoring_credentials` input.
 
+## State-address stability and decommission safety
+
+The object-array interfaces use an explicit immutable `key` for each `for_each` address and a separate cloud resource `name`. Keep keys unchanged when renaming cloud resources. The names-array shorthand deliberately uses the name as the key for convenience; choose object arrays when names may change.
+
+The Web App module previously keyed instances by Azure app name. The new stable-key design changes those addresses to the explicit `key`. If any Web Apps were already applied with the previous configuration, migrate each state address before planning:
+
+```bash
+terraform -chdir=providers/azure state mv \
+  'module.azure_web_apps.azurerm_linux_web_app.this["OLD_AZURE_APP_NAME"]' \
+  'module.azure_web_apps.azurerm_linux_web_app.this["NEW_STABLE_KEY"]'
+```
+
+Do not run this migration if no prior Web App state exists. Back up state first and verify each old/new address with `terraform state list`. Database and SQL Server resources have `prevent_destroy = true` by default. To decommission one, change only its explicit `prevent_destroy` value to `false`, review and apply that change, then run a separately approved destroy. Never disable deletion protection globally just to make a deployment pass.
+
 ## Environment isolation
 
 Example variable files are provided under:
