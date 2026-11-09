@@ -130,7 +130,7 @@ jobs:
           printf '%s' "$TERRAFORM_INPUTS_JSON" | jq -e 'type == "object"' >/dev/null
           printf '%s' "$TERRAFORM_INPUTS_JSON" > "$RUNNER_TEMP/terraform.tfvars.json"
           chmod 600 "$RUNNER_TEMP/terraform.tfvars.json"
-          echo "TF_VAR_region=${{ vars.GCP_REGION }}" >> "$GITHUB_ENV"
+          if [[ "$CLOUD" == "gcp" ]]; then echo "TF_VAR_region=${{ vars.GCP_REGION }}" >> "$GITHUB_ENV"; fi
 
       - name: Initialize remote state with environment-specific locking
         shell: bash
