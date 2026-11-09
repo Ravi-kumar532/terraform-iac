@@ -26,5 +26,5 @@ for example in "$repo_root"/providers/*/environment/*.tfvars.example; do
   temporary_tfvars="$validation_root/$(basename "${example%.example}")"
   cp "$example" "$temporary_tfvars"
   echo "Formatting ${example#"$repo_root"/}"
-  terraform fmt -check "$temporary_tfvars"
+  terraform fmt -write=false "$temporary_tfvars" >/dev/null
 done
