@@ -232,85 +232,102 @@ module "azure_service_bus" {
 
 output "azure_acr_outputs" {
   description = "Outputs from every acr module instance."
+  sensitive   = true
   value = module.azure_acr
 }
 
 output "azure_aks_outputs" {
   description = "Outputs from every aks module instance."
+  sensitive   = true
   value = module.azure_aks
 }
 
 output "azure_app_configuration_outputs" {
   description = "Outputs from every app_configuration module instance."
+  sensitive   = true
   value = module.azure_app_configuration
 }
 
 output "azure_app_service_outputs" {
   description = "Outputs from every app_service module instance."
+  sensitive   = true
   value = module.azure_app_service
 }
 
 output "azure_event_grid_outputs" {
   description = "Outputs from every event_grid module instance."
+  sensitive   = true
   value = module.azure_event_grid
 }
 
 output "azure_function_app_outputs" {
   description = "Outputs from every function_app module instance."
+  sensitive   = true
   value = module.azure_function_app
 }
 
 output "azure_key_vault_outputs" {
   description = "Outputs from every key_vault module instance."
+  sensitive   = true
   value = module.azure_key_vault
 }
 
 output "azure_logic_app_outputs" {
   description = "Outputs from every logic_app module instance."
+  sensitive   = true
   value = module.azure_logic_app
 }
 
 output "azure_monitoring_outputs" {
   description = "Outputs from every monitoring module instance."
+  sensitive   = true
   value = module.azure_monitoring
 }
 
 output "azure_resource_group_outputs" {
   description = "Outputs from every resource_group module instance."
+  sensitive   = true
   value = module.azure_resource_group
 }
 
 output "azure_service_bus_outputs" {
   description = "Outputs from every service_bus module instance."
+  sensitive   = true
   value = module.azure_service_bus
 }
 
 output "azure_sql_database_outputs" {
   description = "Outputs from every sql_database module instance."
+  sensitive   = true
   value = module.azure_sql_database
 }
 
 output "azure_sql_server_outputs" {
   description = "Outputs from every sql_server module instance."
+  sensitive   = true
   value = module.azure_sql_server
 }
 
 output "azure_storage_account_outputs" {
   description = "Outputs from every storage_account module instance."
+  sensitive   = true
   value = module.azure_storage_account
 }
 
 output "azure_subnet_outputs" {
   description = "Outputs from every subnet module instance."
+  sensitive   = true
   value = module.azure_subnet
 }
 
 output "azure_vnet_outputs" {
   description = "Outputs from every vnet module instance."
+  sensitive   = true
   value = module.azure_vnet
 }
 
 output "azure_web_apps_outputs" {
   description = "Outputs from every web_app module instance."
+  sensitive   = true
   value = module.azure_web_apps
 }
