@@ -29,33 +29,44 @@ resource address shifts.
 ├── azure-pipelines.yml
 ├── providers/
 │   ├── aws/
-│   │   ├── backend.tf
-│   │   ├── main.tf
-│   │   ├── provider.tf
-│   │   ├── variables.tf
-│   │   ├── versions.tf
 │   │   ├── bootstrap/
-│   │   └── module/
+│   │   ├── environment/
+│   │   │   ├── dev.tfvars.example
+│   │   │   ├── qa.tfvars.example
+│   │   │   ├── staging.tfvars.example
+│   │   │   └── prod.tfvars.example
+│   │   ├── module/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── provider.tf
+│   │   ├── backend.tf
+│   │   └── versions.tf
 │   ├── azure/
-│   │   ├── backend.tf
-│   │   ├── main.tf
-│   │   ├── provider.tf
-│   │   ├── variables.tf
-│   │   ├── versions.tf
 │   │   ├── bootstrap/
-│   │   └── module/
+│   │   ├── environment/
+│   │   │   ├── dev.tfvars.example
+│   │   │   ├── qa.tfvars.example
+│   │   │   ├── staging.tfvars.example
+│   │   │   └── prod.tfvars.example
+│   │   ├── module/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── provider.tf
+│   │   ├── backend.tf
+│   │   └── versions.tf
 │   └── gcp/
-│       ├── backend.tf
-│       ├── main.tf
-│       ├── provider.tf
-│       ├── variables.tf
-│       ├── versions.tf
 │       ├── bootstrap/
-│       └── module/
-├── providers/<cloud>/environment/
-│   ├── aws/{dev,qa,staging,prod}.tfvars.example
-│   ├── azure/{dev,qa,staging,prod}.tfvars.example
-│   └── gcp/{dev,qa,staging,prod}.tfvars.example
+│       ├── environment/
+│       │   ├── dev.tfvars.example
+│       │   ├── qa.tfvars.example
+│       │   ├── staging.tfvars.example
+│       │   └── prod.tfvars.example
+│       ├── module/
+│       ├── main.tf
+│       ├── variables.tf
+│       ├── provider.tf
+│       ├── backend.tf
+│       └── versions.tf
 ├── docs/
 │   ├── PRODUCTION_GRADE_INFRASTRUCTURE.md
 │   └── REPOSITORY_AUDIT.md
