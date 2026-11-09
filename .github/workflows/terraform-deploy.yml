@@ -53,7 +53,9 @@ jobs:
       TF_ENVIRONMENT: ${{ inputs.environment }}
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
-      TERRAFORM_TFVARS: ${{ secrets.TERRAFORM_TFVARS }}
+      TERRAFORM_TFVARS_AZURE: ${{ secrets.TERRAFORM_TFVARS_AZURE }}
+      TERRAFORM_TFVARS_AWS: ${{ secrets.TERRAFORM_TFVARS_AWS }}
+      TERRAFORM_TFVARS_GCP: ${{ secrets.TERRAFORM_TFVARS_GCP }}
       ARM_USE_OIDC: "true"
       ARM_USE_AZUREAD: "true"
       TF_VAR_environment: ${{ inputs.environment }}
@@ -126,9 +128,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$TERRAFORM_TFVARS" || { echo "Set the environment secret TERRAFORM_TFVARS to the HCL contents of the selected environment tfvars file."; exit 1; }
+          case "$CLOUD" in
+            azure) tfvars_content="$TERRAFORM_TFVARS_AZURE" ;;
+            aws) tfvars_content="$TERRAFORM_TFVARS_AWS" ;;
+            gcp) tfvars_content="$TERRAFORM_TFVARS_GCP" ;;
+            *) echo "Unsupported cloud: $CLOUD"; exit 1 ;;
+          esac
+          test -n "$tfvars_content" || { echo "Set the selected cloud-specific TERRAFORM_TFVARS_<CLOUD> secret in this GitHub Environment."; exit 1; }
           input_file="$RUNNER_TEMP/$CLOUD-$TF_ENVIRONMENT.tfvars"
-          printf '%s' "$TERRAFORM_TFVARS" > "$input_file"
+          printf '%s' "$tfvars_content" > "$input_file"
+          unset tfvars_content
           chmod 600 "$input_file"
           echo "TF_VAR_environment=$TF_ENVIRONMENT" >> "$GITHUB_ENV"
           if [[ "$CLOUD" == "gcp" ]]; then echo "TF_VAR_region=${{ vars.GCP_REGION }}" >> "$GITHUB_ENV"; fi
