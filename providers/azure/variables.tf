@@ -131,12 +131,29 @@ variable "azure_resource_group" {
 }
 
 variable "azure_sql_database" {
-  description = "Array of sql_database module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Repeatable Azure SQL database definitions. Each database has a stable key and can reference a server by server_key."
+  type = list(object({
+    key                  = string
+    name                 = string
+    server_id            = optional(string)
+    server_key           = optional(string)
+    sku_name             = optional(string, "GP_S_Gen5_2")
+    zone_redundant        = optional(bool, true)
+    storage_account_type = optional(string, "Geo")
+    min_capacity         = optional(number, 0.5)
+    backup_retention_days = optional(number, 35)
+    tags                 = optional(map(string), {})
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_sql_database : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_sql_database : try(item.key, "")])) == length(var.azure_sql_database)
-    error_message = "Each azure_sql_database item must have a unique non-empty key."
+    condition = alltrue([
+      for database in var.azure_sql_database :
+      length(trimspace(database.key)) > 0 &&
+      length(trimspace(database.name)) > 0 &&
+      (database.server_id != null || database.server_key != null)
+    ]) && length(distinct([for database in var.azure_sql_database : database.key])) == length(var.azure_sql_database)
+      && length(distinct([for database in var.azure_sql_database : lower(database.name)])) == length(var.azure_sql_database)
+    error_message = "Each SQL database requires a unique key/name and either server_id or server_key."
   }
 }
 
@@ -181,9 +198,46 @@ variable "azure_vnet" {
 }
 
 variable "azure_web_apps" {
-  description = "Array of Linux web apps. Each app can list Key Vault keys in key_vaults and optionally override key_vault_role."
-  type = list(any)
+  description = "Repeatable Web App definitions. One object per app; stable key is the Terraform identity, name is the Azure resource name."
+  type = list(object({
+    key                           = string
+    name                          = string
+    resource_group_name           = string
+    location                      = string
+    service_plan_id               = optional(string)
+    service_plan_key              = optional(string)
+    public_network_access_enabled = optional(bool, false)
+    integration_subnet_id         = optional(string)
+    identity_ids                  = optional(list(string), [])
+    user_assigned_identity_keys   = optional(list(string), [])
+    key_vaults                    = optional(list(string), [])
+    key_vault_role                = optional(string, "Key Vault Secrets User")
+    app_settings                  = optional(map(string), {})
+    tags                          = optional(map(string), {})
+    runtime = optional(object({
+      python_version      = optional(string)
+      node_version        = optional(string)
+      php_version         = optional(string)
+      dotnet_version      = optional(string)
+      ruby_version        = optional(string)
+      java_version        = optional(string)
+      java_server         = optional(string)
+      java_server_version = optional(string)
+    }), {})
+  }))
   default = []
+  validation {
+    condition = alltrue([
+      for app in var.azure_web_apps :
+      length(trimspace(app.key)) > 0 &&
+      length(trimspace(app.name)) > 0 &&
+      length(trimspace(app.resource_group_name)) > 0 &&
+      length(trimspace(app.location)) > 0 &&
+      (app.service_plan_id != null || app.service_plan_key != null)
+    ]) && length(distinct([for app in var.azure_web_apps : app.key])) == length(var.azure_web_apps)
+      && length(distinct([for app in var.azure_web_apps : lower(app.name)])) == length(var.azure_web_apps)
+    error_message = "Each Web App requires a unique key/name, resource group, location, and either service_plan_id or service_plan_key."
+  }
 }
 variable "azure_service_bus_namespaces" {
   description = "Array of Service Bus namespace definitions; each item requires a unique key."
