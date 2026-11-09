@@ -273,7 +273,7 @@ still appear in state; protect all state backends accordingly.
 
 ## Bulk resource input model
 
-Declare one object per resource in the relevant provider's environment tfvars file. For example, Azure `azure_web_apps` and `azure_sql_database` are typed lists of objects; add 20 entries without creating 20 module blocks. Each object has a stable `key` for Terraform state identity and a separate cloud resource `name`. Use `service_plan_key` and `server_key` to reference resources created in the same configuration, or pass existing resource IDs. This prevents resource identity from depending on list order or mutable display names.
+Declare one object per resource in the relevant provider's environment tfvars file. For bulk Azure estates, `azure_web_app_names = ["web-01", ..., "web-20"]` and `azure_sql_database_names = ["orders", "billing", ...]` create many resources from shared defaults. Use `azure_web_apps` and `azure_sql_database` object arrays when each resource needs overrides. Object arrays use an immutable `key` separate from the Azure resource `name`; shorthand name arrays use the name as the key. Use `service_plan_key` and `server_key` to reference resources created in the same configuration, or pass existing resource IDs.
 
 Local deployment example:
 
