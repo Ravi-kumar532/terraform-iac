@@ -11,6 +11,6 @@ resource "azurerm_mssql_database" "this" {
     retention_days = var.backup_retention_days
   }
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = var.prevent_destroy
   }
 }

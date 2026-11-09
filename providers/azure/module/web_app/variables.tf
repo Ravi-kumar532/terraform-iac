@@ -1,6 +1,7 @@
 variable "apps" {
   description = "Linux Web App definitions; use Key Vault references instead of secret values in app_settings."
   type = list(object({
+    key                           = string
     name                          = string
     resource_group_name           = string
     location                      = string
@@ -8,6 +9,8 @@ variable "apps" {
     public_network_access_enabled = optional(bool, false)
     integration_subnet_id         = optional(string)
     app_settings                  = optional(map(string), {})
+    identity_ids                  = optional(list(string), [])
+    prevent_destroy               = optional(bool, true)
     tags                          = optional(map(string), {})
     runtime = optional(object({
       python_version      = optional(string)
@@ -26,13 +29,15 @@ variable "apps" {
     condition = (
       alltrue([
         for app in var.apps :
+        length(trimspace(app.key)) > 0 &&
         length(trimspace(app.name)) > 0 &&
         length(trimspace(app.resource_group_name)) > 0 &&
         length(trimspace(app.location)) > 0 &&
         length(trimspace(app.service_plan_id)) > 0
       ]) &&
+      length(distinct([for app in var.apps : app.key])) == length(var.apps) &&
       length(distinct([for app in var.apps : lower(app.name)])) == length(var.apps)
     )
-    error_message = "Each app must have a unique non-empty name, resource group, location, and service plan ID."
+    error_message = "Each app must have unique key/name and non-empty resource group, location, and service plan ID."
   }
 }

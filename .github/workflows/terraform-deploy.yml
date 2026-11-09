@@ -1,0 +1,206 @@
+name: Terraform deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      cloud:
+        description: Cloud provider
+        type: choice
+        required: true
+        options:
+          - azure
+          - aws
+          - gcp
+      environment:
+        description: Isolated deployment environment
+        type: choice
+        required: true
+        options:
+          - dev
+          - qa
+          - staging
+          - prod
+      action:
+        description: Terraform operation
+        type: choice
+        required: true
+        default: plan
+        options:
+          - plan
+          - apply
+          - destroy
+      confirm_destroy:
+        description: Enter DESTROY only for an explicitly approved destroy operation
+        type: string
+        required: false
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-${{ inputs.cloud }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: ${{ inputs.action }} ${{ inputs.cloud }} / ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: ${{ inputs.environment }}
+    env:
+      CLOUD: ${{ inputs.cloud }}
+      TF_ENVIRONMENT: ${{ inputs.environment }}
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      TERRAFORM_TFVARS_AZURE: ${{ secrets.TERRAFORM_TFVARS_AZURE }}
+      TERRAFORM_TFVARS_AWS: ${{ secrets.TERRAFORM_TFVARS_AWS }}
+      TERRAFORM_TFVARS_GCP: ${{ secrets.TERRAFORM_TFVARS_GCP }}
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      TF_VAR_environment: ${{ inputs.environment }}
+      TF_VAR_tenant_id: ${{ vars.AZURE_TENANT_ID }}
+      TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_client_id: ${{ vars.AZURE_CLIENT_ID }}
+      TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+      TF_VAR_region: ${{ vars.AWS_REGION }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+          terraform_wrapper: false
+
+      - name: Validate destroy confirmation
+        if: inputs.action == 'destroy'
+        env:
+          CONFIRM_DESTROY: ${{ inputs.confirm_destroy }}
+        run: |
+          if [[ "$CONFIRM_DESTROY" != "DESTROY" ]]; then
+            echo "Destroy requires confirm_destroy=DESTROY and approval of the selected GitHub Environment."
+            exit 1
+          fi
+
+      - name: Authenticate to Azure using OIDC
+        if: inputs.cloud == 'azure'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Authenticate to AWS using OIDC
+        if: inputs.cloud == 'aws'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: terraform-${{ inputs.environment }}
+
+      - name: Authenticate to Google Cloud using Workload Identity Federation
+        if: inputs.cloud == 'gcp'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+          export_environment_variables: true
+
+      - name: Load cloud-managed Terraform secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$CLOUD" == "azure" && -n "${{ vars.AZURE_SECRETS_VAULT }}" && -n "${{ vars.AZURE_SQL_CREDENTIALS_SECRET }}" ]]; then
+            secret="$(az keyvault secret show --vault-name "${{ vars.AZURE_SECRETS_VAULT }}" --name "${{ vars.AZURE_SQL_CREDENTIALS_SECRET }}" --query value --output tsv)"
+            echo "::add-mask::$secret"
+            printf 'TF_VAR_azure_sql_server_credentials=%s\n' "$secret" >> "$GITHUB_ENV"
+          fi
+          if [[ "$CLOUD" == "gcp" && -n "${{ vars.GCP_MONITORING_CREDENTIALS_SECRET }}" ]]; then
+            secret="$(gcloud secrets versions access latest --secret="${{ vars.GCP_MONITORING_CREDENTIALS_SECRET }}" --project="${{ vars.GCP_PROJECT_ID }}")"
+            echo "::add-mask::$secret"
+            printf 'TF_VAR_gcp_monitoring_credentials=%s\n' "$secret" >> "$GITHUB_ENV"
+          fi
+
+      - name: Prepare protected environment tfvars
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$CLOUD" in
+            azure) tfvars_content="$TERRAFORM_TFVARS_AZURE" ;;
+            aws) tfvars_content="$TERRAFORM_TFVARS_AWS" ;;
+            gcp) tfvars_content="$TERRAFORM_TFVARS_GCP" ;;
+            *) echo "Unsupported cloud: $CLOUD"; exit 1 ;;
+          esac
+          test -n "$tfvars_content" || { echo "Set the selected cloud-specific TERRAFORM_TFVARS_<CLOUD> secret in this GitHub Environment."; exit 1; }
+          input_file="$RUNNER_TEMP/$CLOUD-$TF_ENVIRONMENT.tfvars"
+          printf '%s' "$tfvars_content" > "$input_file"
+          unset tfvars_content
+          chmod 600 "$input_file"
+          echo "TF_VAR_environment=$TF_ENVIRONMENT" >> "$GITHUB_ENV"
+          if [[ "$CLOUD" == "gcp" ]]; then echo "TF_VAR_region=${{ vars.GCP_REGION }}" >> "$GITHUB_ENV"; fi
+
+      - name: Initialize remote state with environment-specific locking
+        shell: bash
+        env:
+          TFSTATE_RESOURCE_GROUP: ${{ vars.TFSTATE_RESOURCE_GROUP }}
+          TFSTATE_STORAGE_ACCOUNT: ${{ vars.TFSTATE_STORAGE_ACCOUNT }}
+          TFSTATE_CONTAINER: ${{ vars.TFSTATE_CONTAINER }}
+          TFSTATE_BUCKET: ${{ vars.TFSTATE_BUCKET }}
+          TFSTATE_REGION: ${{ vars.TFSTATE_REGION }}
+        run: |
+          set -euo pipefail
+          case "$CLOUD" in
+            azure)
+              : "${TFSTATE_RESOURCE_GROUP:?Missing TFSTATE_RESOURCE_GROUP}"
+              : "${TFSTATE_STORAGE_ACCOUNT:?Missing TFSTATE_STORAGE_ACCOUNT}"
+              : "${TFSTATE_CONTAINER:?Missing TFSTATE_CONTAINER}"
+              terraform -chdir="providers/$CLOUD" init -input=false \
+                -backend-config="resource_group_name=$TFSTATE_RESOURCE_GROUP" \
+                -backend-config="storage_account_name=$TFSTATE_STORAGE_ACCOUNT" \
+                -backend-config="container_name=$TFSTATE_CONTAINER" \
+                -backend-config="key=$TF_ENVIRONMENT/terraform.tfstate" \
+                -backend-config="use_oidc=true" \
+                -backend-config="use_azuread_auth=true" \
+                -backend-config="tenant_id=${{ vars.AZURE_TENANT_ID }}" \
+                -backend-config="client_id=${{ vars.AZURE_CLIENT_ID }}" \
+                -backend-config="subscription_id=${{ vars.AZURE_SUBSCRIPTION_ID }}"
+              ;;
+            aws)
+              : "${TFSTATE_BUCKET:?Missing TFSTATE_BUCKET}"
+              : "${TFSTATE_REGION:?Missing TFSTATE_REGION}"
+              terraform -chdir="providers/$CLOUD" init -input=false \
+                -backend-config="bucket=$TFSTATE_BUCKET" \
+                -backend-config="key=$TF_ENVIRONMENT/terraform.tfstate" \
+                -backend-config="region=$TFSTATE_REGION" \
+                -backend-config="encrypt=true"
+              ;;
+            gcp)
+              : "${TFSTATE_BUCKET:?Missing TFSTATE_BUCKET}"
+              terraform -chdir="providers/$CLOUD" init -input=false \
+                -backend-config="bucket=$TFSTATE_BUCKET" \
+                -backend-config="prefix=terraform/$TF_ENVIRONMENT"
+              ;;
+          esac
+
+      - name: Terraform validate
+        run: terraform -chdir="providers/$CLOUD" validate -no-color
+
+      - name: Terraform plan
+        if: inputs.action == 'plan' || inputs.action == 'apply'
+        run: terraform -chdir="providers/$CLOUD" plan -input=false -no-color -var-file="$RUNNER_TEMP/$CLOUD-$TF_ENVIRONMENT.tfvars" -out="$RUNNER_TEMP/terraform.tfplan"
+
+      - name: Terraform apply saved plan
+        if: inputs.action == 'apply'
+        run: terraform -chdir="providers/$CLOUD" apply -input=false -no-color "$RUNNER_TEMP/terraform.tfplan"
+
+      - name: Terraform destroy
+        if: inputs.action == 'destroy'
+        run: terraform -chdir="providers/$CLOUD" destroy -input=false -auto-approve -no-color -var-file="$RUNNER_TEMP/$CLOUD-$TF_ENVIRONMENT.tfvars"
+
+      - name: Remove temporary tfvars and plan
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/$CLOUD-$TF_ENVIRONMENT.tfvars" "$RUNNER_TEMP/terraform.tfplan"

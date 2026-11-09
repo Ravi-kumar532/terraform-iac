@@ -1,6 +1,6 @@
 locals {
   apps = {
-    for app in var.apps : app.name => app
+    for app in var.apps : app.key => app
   }
 }
 
@@ -18,7 +18,12 @@ resource "azurerm_linux_web_app" "this" {
   tags                          = each.value.tags
 
   identity {
-    type = "SystemAssigned"
+    type         = length(each.value.identity_ids) > 0 ? "SystemAssigned, UserAssigned" : "SystemAssigned"
+    identity_ids = each.value.identity_ids
+  }
+
+  lifecycle {
+    prevent_destroy = each.value.prevent_destroy
   }
 
   site_config {

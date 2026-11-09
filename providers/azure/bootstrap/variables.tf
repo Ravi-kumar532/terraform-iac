@@ -29,3 +29,27 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "public_network_access_enabled" {
+  description = "Allow public network access to the state storage account. Production should use private connectivity and a self-hosted runner."
+  type        = bool
+  default     = false
+}
+
+variable "allowed_ip_ranges" {
+  description = "Explicit public IPv4 ranges allowed to reach the state storage account when public access is enabled."
+  type        = list(string)
+  default     = []
+}
+
+variable "allowed_subnet_ids" {
+  description = "Subnet resource IDs allowed to reach the state storage account."
+  type        = list(string)
+  default     = []
+}
+
+variable "network_bypass" {
+  description = "Azure Storage network-rule bypass services."
+  type        = set(string)
+  default     = []
+}

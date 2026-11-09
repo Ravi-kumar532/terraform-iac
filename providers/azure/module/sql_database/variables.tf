@@ -40,3 +40,9 @@ variable "tags" {
   description = "Resource tags."
 
 }
+
+variable "prevent_destroy" {
+  description = "Prevent accidental database deletion; set false only through a reviewed decommission plan."
+  type        = bool
+  default     = true
+}

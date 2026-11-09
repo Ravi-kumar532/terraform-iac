@@ -49,3 +49,9 @@ variable "public_network_access_enabled" {
   default     = false
   description = "Enable public SQL endpoint access intentionally; firewall/private endpoint setup is caller-managed."
 }
+
+variable "prevent_destroy" {
+  description = "Prevent accidental SQL server deletion; set false only through a reviewed decommission plan."
+  type        = bool
+  default     = true
+}

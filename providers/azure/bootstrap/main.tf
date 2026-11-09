@@ -16,6 +16,13 @@ resource "azurerm_storage_account" "terraform_state" {
   public_network_access_enabled   = true
   tags                            = var.tags
 
+  network_rules {
+    default_action             = "Deny"
+    bypass                     = var.network_bypass
+    ip_rules                   = var.allowed_ip_ranges
+    virtual_network_subnet_ids = var.allowed_subnet_ids
+  }
+
   blob_properties {
     versioning_enabled = true
 

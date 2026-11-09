@@ -1,56 +1,97 @@
-# Multi-cloud Terraform modules
+# Production-grade multi-cloud Terraform infrastructure
 
-Reusable Terraform modules for AWS, Microsoft Azure, and Google Cloud. The
-repository also includes separate Terraform roots for bootstrapping each cloud's
-remote-state storage.
+Terraform infrastructure modules and independently deployable provider roots for
+AWS, Microsoft Azure, and Google Cloud. The provider roots compose every module
+and accept repeatable input arrays for multi-instance infrastructure.
 
-> **Scope:** `providers/<cloud>/module/` contains reusable child modules only.
-> It does not contain workload root configurations, environment variable files,
-> or workload state backends.
-> GitHub Actions and Azure DevOps validate the modules and bootstrap roots;
-> they do not deploy infrastructure.
+## Current architecture
+
+| Provider root | Modules composed | Authentication | State backend |
+| --- | ---: | --- | --- |
+| `providers/azure` | 19 | Microsoft Entra OIDC | Azure Blob Storage |
+| `providers/aws` | 16 | OIDC role assumption | S3 native lock file |
+| `providers/gcp` | 16 | Workload Identity Federation | Google Cloud Storage |
+| **Total** | **51** | | |
+
+The 49 original modules are all wired into their provider's `main.tf`. Two
+additional Azure modules provide user-assigned managed identities and private
+endpoints. Root inputs are arrays of objects with stable `key` values and are
+converted to `for_each` maps to support multiple instances without index-based
+resource address shifts.
 
 ## Repository structure
 
 ```text
 .
-├── .azure/
-│   └── pipelines/
-│       └── terraform.yml
-├── .github/
-│   └── workflows/
-│       └── terraform-ci-cd.yml
+├── .github/workflows/
+│   ├── terraform-ci.yml
+│   ├── terraform-deploy.yml
+├── azure-pipelines.yml
 ├── providers/
 │   ├── aws/
-│   │   ├── bootstrap/       # S3 state bucket and DynamoDB lock table
-│   │   └── module/          # Reusable AWS service modules
+│   │   ├── bootstrap/
+│   │   ├── environment/
+│   │   │   ├── dev.tfvars.example
+│   │   │   ├── qa.tfvars.example
+│   │   │   ├── staging.tfvars.example
+│   │   │   └── prod.tfvars.example
+│   │   ├── module/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── provider.tf
+│   │   ├── backend.tf
+│   │   └── versions.tf
 │   ├── azure/
-│   │   ├── bootstrap/       # State resource group, Storage account, container
-│   │   └── module/          # Reusable Azure service modules
+│   │   ├── bootstrap/
+│   │   ├── environment/
+│   │   │   ├── dev.tfvars.example
+│   │   │   ├── qa.tfvars.example
+│   │   │   ├── staging.tfvars.example
+│   │   │   └── prod.tfvars.example
+│   │   ├── module/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── provider.tf
+│   │   ├── backend.tf
+│   │   └── versions.tf
 │   └── gcp/
-│       ├── bootstrap/       # Versioned Cloud Storage state bucket
-│       └── module/          # Reusable Google Cloud service modules
+│       ├── bootstrap/
+│       ├── environment/
+│       │   ├── dev.tfvars.example
+│       │   ├── qa.tfvars.example
+│       │   ├── staging.tfvars.example
+│       │   └── prod.tfvars.example
+│       ├── module/
+│       ├── main.tf
+│       ├── variables.tf
+│       ├── provider.tf
+│       ├── backend.tf
+│       └── versions.tf
+├── docs/
+│   ├── PRODUCTION_GRADE_INFRASTRUCTURE.md
+│   └── REPOSITORY_AUDIT.md
 ├── scripts/
 │   └── terraform-validate.sh
 └── README.md
 ```
 
-Each child module directory has its own inputs, resources, outputs, and provider
-constraints. There is only one `module` directory level per cloud; the module
-directories sit directly inside it. The module collection is not itself a
-Terraform root, so it does not contain root `main.tf`, `parameters.tf`,
-`backend.tf`, or provider configuration files.
+## Deployment and security
 
-Module directories use each cloud's native service names rather than a shared
-cross-cloud name. Examples include Azure `aks/`, AWS `eks/`, Google Cloud
-`gke/`, Azure `app_service/`, AWS `app_runner/`, and Google Cloud `cloud_run/`.
-Other equivalents use provider-specific names such as `acr/`, `ecr/`, and
-`artifact_registry/`. Azure also has `key_vault/`; each provider has a
-`monitoring/` module.
+- `.github/workflows/terraform-ci.yml` formats and validates every module and provider root.
+- `.github/workflows/terraform-deploy.yml` supports OIDC plan/apply and confirmed destroy for Azure, AWS, and GCP.
+- `azure-pipelines.yml` provides an Azure DevOps Azure deployment path using a Workload Identity Federation service connection.
+- `dev`, `qa`, `staging`, and `prod` use separate files under each provider's `environment/` folder and separate backend keys/prefixes. Configure approval gates in GitHub Environments and Azure DevOps Environments.
+- Secrets are injected from Azure Key Vault or Google Secret Manager where configured. AWS RDS uses managed master credentials. Never commit real `.tfvars`, credentials, state, or plan files.
+- Azure Key Vault uses RBAC by default and can receive role assignments for multiple system-assigned and user-assigned identities. Private endpoints can be wired to service resource IDs and private DNS zone IDs.
+- No cloud apply is run automatically by CI. A production plan, approval, and apply are explicit operator actions.
+
+See [Production-grade infrastructure architecture](docs/PRODUCTION_GRADE_INFRASTRUCTURE.md)
+for array examples, state bootstrap, OIDC setup, secrets, pipeline configuration,
+and the remaining production acceptance gates.
 
 ## Module catalog and cloud equivalents
 
-The three providers expose the same service categories using native cloud
+The three providers expose equivalent service categories using native cloud
 resources. These services are functional alternatives, not exact feature-for-
 feature matches; review each cloud's quotas, semantics, costs, and operational
 requirements before selecting one.
@@ -59,9 +100,9 @@ requirements before selecting one.
 | --- | --- | --- | --- |
 | Resource grouping | `resource_group` / Resource Groups | `resource_groups` / tag-based resource groups | `project` / Google Cloud project |
 | Object storage | `storage_account` / Blob Storage | `s3_bucket` / Amazon S3 | `cloud_storage` / Cloud Storage |
-| Network / subnet | `vnet`, `subnet` / VNet | `vpc`, `subnet` / VPC | `vpc`, `subnet` / VPC network |
+| Network / subnet | `vnet`, `subnet`, `private_endpoint` / VNet and Private Link | `vpc`, `subnet` / VPC | `vpc`, `subnet` / VPC network |
 | Managed application hosting | `app_service` / App Service plan | `app_runner` / App Runner | `cloud_run` / Cloud Run |
-| Web application | `web_app` / App Service | `elastic_beanstalk` / Elastic Beanstalk | `app_engine` / App Engine Standard |
+| Identity | `managed_identity` / User-assigned managed identity | Managed IAM roles in service modules | Service accounts in service modules |\n| Web application | `web_app` / App Service | `elastic_beanstalk` / Elastic Beanstalk | `app_engine` / App Engine Standard |
 | Functions | `function_app` / Azure Functions | `lambda` / AWS Lambda | `cloud_functions` / Cloud Functions (2nd gen) |
 | Workflow orchestration | `logic_app` / Logic Apps | `step_functions` / Step Functions | `workflows` / Workflows |
 | Kubernetes | `aks` / AKS | `eks` / EKS | `gke` / GKE |
@@ -229,3 +270,16 @@ still appear in state; protect all state backends accordingly.
 - Review bootstrap retention and deletion behavior before managing state
   containing real workloads.
 - No cloud deployment is performed by this repository's CI pipelines.
+
+## Bulk resource input model
+
+Declare one object per resource in the relevant provider's environment tfvars file. For bulk Azure estates, `azure_web_app_names = ["web-01", ..., "web-20"]` and `azure_sql_database_names = ["orders", "billing", ...]` create many resources from shared defaults. Use `azure_web_apps` and `azure_sql_database` object arrays when each resource needs overrides. Object arrays use an immutable `key` separate from the Azure resource `name`; shorthand name arrays use the name as the key. Use `service_plan_key` and `server_key` to reference resources created in the same configuration, or pass existing resource IDs.
+
+Local deployment example:
+
+```bash
+terraform -chdir=providers/azure init
+terraform -chdir=providers/azure plan -var-file=environment/dev.tfvars
+```
+
+Copy the matching `.tfvars.example` to `dev.tfvars` (or qa/staging/prod) and populate environment-specific values. Real `.tfvars` files are ignored by Git. CI/CD uses the protected `TERRAFORM_TFVARS_AZURE`, `TERRAFORM_TFVARS_AWS`, and `TERRAFORM_TFVARS_GCP` secrets to create a temporary file at runtime. Do not put secret values in tfvars; use Key Vault, Secrets Manager, or Secret Manager and pass only secret references or protected runtime variables.

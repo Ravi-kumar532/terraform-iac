@@ -15,6 +15,6 @@ resource "azurerm_mssql_server" "this" {
   }
   tags = var.tags
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = var.prevent_destroy
   }
 }
