@@ -45,7 +45,7 @@ module "azure_aks" {
   node_count = try(each.value.node_count, null)
   min_count = try(each.value.min_count, null)
   max_count = try(each.value.max_count, null)
-  subnet_id = try(each.value.subnet_id, module.azure_subnet[each.value.subnet_key].id)
+  subnet_id = coalesce(try(each.value.subnet_id, null), try(module.azure_subnet[each.value.subnet_key].id, null))
 }
 
 module "azure_app_configuration" {
@@ -90,8 +90,8 @@ module "azure_function_app" {
   resource_group_name = try(each.value.resource_group_name, null)
   location = try(each.value.location, null)
   tags = merge(local.azure_common_tags, try(each.value.tags, {}))
-  service_plan_id = try(each.value.service_plan_id, module.azure_app_service[each.value.service_plan_key].id)
-  storage_account_name = try(each.value.storage_account_name, module.azure_storage_account[each.value.storage_account_key].name)
+  service_plan_id = coalesce(try(each.value.service_plan_id, null), try(module.azure_app_service[each.value.service_plan_key].id, null))
+  storage_account_name = coalesce(try(each.value.storage_account_name, null), try(module.azure_storage_account[each.value.storage_account_key].name, null))
   python_version = try(each.value.python_version, null)
   integration_subnet_id = try(each.value.integration_subnet_id, null)
   public_network_access_enabled = try(each.value.public_network_access_enabled, null)
@@ -146,7 +146,7 @@ module "azure_monitoring" {
   name = try(each.value.name, null)
   resource_group_name = try(each.value.resource_group_name, null)
   location = try(each.value.location, null)
-  aks_cluster_id = try(each.value.aks_cluster_id, module.azure_aks[each.value.aks_key].id)
+  aks_cluster_id = coalesce(try(each.value.aks_cluster_id, null), try(module.azure_aks[each.value.aks_key].id, null))
   tags = merge(local.azure_common_tags, try(each.value.tags, {}))
 }
 
@@ -208,7 +208,7 @@ module "azure_subnet" {
   for_each = { for item in var.azure_subnet : item.key => item }
   name = try(each.value.name, null)
   resource_group_name = try(each.value.resource_group_name, null)
-  virtual_network_name = try(each.value.virtual_network_name, module.azure_vnet[each.value.vnet_key].name)
+  virtual_network_name = coalesce(try(each.value.virtual_network_name, null), try(module.azure_vnet[each.value.vnet_key].name, null))
   address_prefixes = try(each.value.address_prefixes, null)
   service_endpoints = try(each.value.service_endpoints, null)
 }
