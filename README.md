@@ -26,7 +26,6 @@ resource address shifts.
 ├── .github/workflows/
 │   ├── terraform-ci.yml
 │   ├── terraform-deploy.yml
-│   └── terraform-validate.yml
 ├── azure-pipelines.yml
 ├── providers/
 │   ├── aws/
