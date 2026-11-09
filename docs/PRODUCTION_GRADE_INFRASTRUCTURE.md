@@ -56,6 +56,7 @@ azure_key_vault = [
 
 azure_web_apps = [
   {
+    key                         = "web-one"
     name                        = "REPLACE_WITH_WEB_APP_ONE"
     resource_group_name         = "REPLACE_WITH_RESOURCE_GROUP"
     location                    = "REPLACE_WITH_REGION"
@@ -68,6 +69,7 @@ azure_web_apps = [
     }
   },
   {
+    key                         = "web-two"
     name                        = "REPLACE_WITH_WEB_APP_TWO"
     resource_group_name         = "REPLACE_WITH_RESOURCE_GROUP"
     location                    = "REPLACE_WITH_REGION"
@@ -105,10 +107,10 @@ azure_sql_database = [
 ]
 ```
 
-- Each Web App receives a system-assigned identity. Optional user-assigned identities are created from `azure_managed_identity` and attached through `user_assigned_identity_keys`.
+- Each Web App receives a system-assigned identity. Optional user-assigned identities are created from `azure_managed_identity` and attached through `user_assigned_identity_keys`. Use a stable `key` (Terraform address identity) distinct from the Azure `name`; this lets you change resource naming without changing the `for_each` key. Add one object per app—20 or more app objects are supported without additional module blocks.
 - List each Key Vault input key in an app's `key_vaults` to grant its system identity the `Key Vault Secrets User` role. Identities can also list `key_vaults` in their own definition. Override the role only when a stronger permission is justified.
 - Key Vault uses Azure RBAC by default, purge protection, 90-day soft-delete retention, and public network access disabled by default. Private endpoint and private DNS zone IDs are supplied through `azure_private_endpoint`.
-- SQL database entries reference a SQL server by `server_key`; the root wires the server ID. SQL administrator credentials are kept in the separate sensitive `azure_sql_server_credentials` map and are intended to be injected from Key Vault by the deployment workflow.
+- SQL database entries reference a SQL server by `server_key`; the root wires the server ID. Add one object per database; a single server can host many databases and the same database name may be reused on different servers when the stable keys differ. SQL administrator credentials are stored in a Key Vault secret as a JSON map keyed by SQL server Terraform key, for example `{"sql-primary":{"administrator_login":"...","administrator_login_password":"..."}}`, and injected into the sensitive `azure_sql_server_credentials` variable at runtime. Do not add this map to the environment tfvars file: `-var-file` values take precedence over `TF_VAR_*` environment variables.
 - App settings should contain Key Vault reference URIs, never literal secret values.
 
 ### AWS and Google Cloud
