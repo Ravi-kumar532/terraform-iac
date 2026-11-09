@@ -1,6 +1,6 @@
 locals {
   apps = {
-    for app in var.apps : app.name => app
+    for app in var.apps : app.key => app
   }
 }
 
