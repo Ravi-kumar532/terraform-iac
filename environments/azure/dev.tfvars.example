@@ -1,0 +1,24 @@
+environment = "dev"
+tenant_id = "REPLACE_WITH_TENANT_ID"
+subscription_id = "REPLACE_WITH_SUBSCRIPTION_ID"
+client_id = "REPLACE_WITH_OIDC_CLIENT_ID"
+common_tags = { ManagedBy = "Terraform" }
+azure_sql_server_credentials = {}
+azure_sql_server_credentials = []
+azure_acr = []
+azure_aks = []
+azure_app_configuration = []
+azure_app_service = []
+azure_event_grid = []
+azure_function_app = []
+azure_key_vault = []
+azure_logic_app = []
+azure_monitoring = []
+azure_resource_group = []
+azure_sql_database = []
+azure_sql_server = []
+azure_storage_account = []
+azure_subnet = []
+azure_vnet = []
+azure_web_apps = []
+azure_service_bus_namespaces = []
