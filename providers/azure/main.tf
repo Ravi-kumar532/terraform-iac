@@ -2,10 +2,11 @@ locals {
   azure_common_tags = merge(var.common_tags, { Environment = var.environment })
   azure_web_app_definitions = [
     for app in var.azure_web_apps : {
+      key                           = app.key
       name                          = app.name
       resource_group_name           = app.resource_group_name
       location                      = app.location
-      service_plan_id               = try(app.service_plan_id, module.azure_app_service[app.service_plan_key].id)
+      service_plan_id               = app.service_plan_id != null ? app.service_plan_id : module.azure_app_service[app.service_plan_key].id
       public_network_access_enabled = try(app.public_network_access_enabled, false)
       integration_subnet_id         = try(app.integration_subnet_id, null)
       identity_ids                  = concat(try(app.identity_ids, []), [for identity_key in try(app.user_assigned_identity_keys, []) : module.azure_managed_identity[identity_key].id])
@@ -112,7 +113,7 @@ module "azure_key_vault" {
     try(each.value.role_assignments, {}),
     {
       for app in var.azure_web_apps : "${app.name}-system-secrets-user" => {
-        principal_id         = module.azure_web_apps.identity_principal_ids[app.name]
+        principal_id         = module.azure_web_apps.identity_principal_ids[app.key]
         role_definition_name = try(app.key_vault_role, "Key Vault Secrets User")
       }
       if contains(try(app.key_vaults, []), each.key)
@@ -160,7 +161,7 @@ module "azure_sql_database" {
   source   = "./module/sql_database"
   for_each = { for item in var.azure_sql_database : item.key => item }
   name = try(each.value.name, null)
-  server_id = try(each.value.server_id, module.azure_sql_server[each.value.server_key].id)
+  server_id = each.value.server_id != null ? each.value.server_id : module.azure_sql_server[each.value.server_key].id
   sku_name = try(each.value.sku_name, null)
   zone_redundant = try(each.value.zone_redundant, null)
   storage_account_type = try(each.value.storage_account_type, null)
