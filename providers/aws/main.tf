@@ -208,34 +208,82 @@ module "aws_vpc" {
   tags = merge(local.aws_common_tags, try(each.value.tags, {}))
 }
 
-output "aws_app_runner_outputs" { description = "Outputs from all app_runner module instances." value = module.aws_app_runner }
+output "aws_app_runner_outputs" {
+  description = "Outputs from all app_runner module instances."
+  value       = module.aws_app_runner
+}
 
-output "aws_appconfig_outputs" { description = "Outputs from all appconfig module instances." value = module.aws_appconfig }
+output "aws_appconfig_outputs" {
+  description = "Outputs from all appconfig module instances."
+  value       = module.aws_appconfig
+}
 
-output "aws_ecr_outputs" { description = "Outputs from all ecr module instances." value = module.aws_ecr }
+output "aws_ecr_outputs" {
+  description = "Outputs from all ecr module instances."
+  value       = module.aws_ecr
+}
 
-output "aws_eks_outputs" { description = "Outputs from all eks module instances." value = module.aws_eks }
+output "aws_eks_outputs" {
+  description = "Outputs from all eks module instances."
+  value       = module.aws_eks
+}
 
-output "aws_elastic_beanstalk_outputs" { description = "Outputs from all elastic_beanstalk module instances." value = module.aws_elastic_beanstalk }
+output "aws_elastic_beanstalk_outputs" {
+  description = "Outputs from all elastic_beanstalk module instances."
+  value       = module.aws_elastic_beanstalk
+}
 
-output "aws_eventbridge_outputs" { description = "Outputs from all eventbridge module instances." value = module.aws_eventbridge }
+output "aws_eventbridge_outputs" {
+  description = "Outputs from all eventbridge module instances."
+  value       = module.aws_eventbridge
+}
 
-output "aws_lambda_outputs" { description = "Outputs from all lambda module instances." value = module.aws_lambda }
+output "aws_lambda_outputs" {
+  description = "Outputs from all lambda module instances."
+  value       = module.aws_lambda
+}
 
-output "aws_monitoring_outputs" { description = "Outputs from all monitoring module instances." value = module.aws_monitoring }
+output "aws_monitoring_outputs" {
+  description = "Outputs from all monitoring module instances."
+  value       = module.aws_monitoring
+}
 
-output "aws_rds_mysql_outputs" { description = "Outputs from all rds_mysql module instances." value = module.aws_rds_mysql }
+output "aws_rds_mysql_outputs" {
+  description = "Outputs from all rds_mysql module instances."
+  value       = module.aws_rds_mysql
+}
 
-output "aws_rds_sql_server_outputs" { description = "Outputs from all rds_sql_server module instances." value = module.aws_rds_sql_server }
+output "aws_rds_sql_server_outputs" {
+  description = "Outputs from all rds_sql_server module instances."
+  value       = module.aws_rds_sql_server
+}
 
-output "aws_resource_groups_outputs" { description = "Outputs from all resource_groups module instances." value = module.aws_resource_groups }
+output "aws_resource_groups_outputs" {
+  description = "Outputs from all resource_groups module instances."
+  value       = module.aws_resource_groups
+}
 
-output "aws_s3_bucket_outputs" { description = "Outputs from all s3_bucket module instances." value = module.aws_s3_bucket }
+output "aws_s3_bucket_outputs" {
+  description = "Outputs from all s3_bucket module instances."
+  value       = module.aws_s3_bucket
+}
 
-output "aws_sqs_sns_outputs" { description = "Outputs from all sqs_sns module instances." value = module.aws_sqs_sns }
+output "aws_sqs_sns_outputs" {
+  description = "Outputs from all sqs_sns module instances."
+  value       = module.aws_sqs_sns
+}
 
-output "aws_step_functions_outputs" { description = "Outputs from all step_functions module instances." value = module.aws_step_functions }
+output "aws_step_functions_outputs" {
+  description = "Outputs from all step_functions module instances."
+  value       = module.aws_step_functions
+}
 
-output "aws_subnet_outputs" { description = "Outputs from all subnet module instances." value = module.aws_subnet }
+output "aws_subnet_outputs" {
+  description = "Outputs from all subnet module instances."
+  value       = module.aws_subnet
+}
 
-output "aws_vpc_outputs" { description = "Outputs from all vpc module instances." value = module.aws_vpc }
+output "aws_vpc_outputs" {
+  description = "Outputs from all vpc module instances."
+  value       = module.aws_vpc
+}
