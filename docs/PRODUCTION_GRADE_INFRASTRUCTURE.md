@@ -119,9 +119,9 @@ All AWS and GCP modules are also configured in their provider root `main.tf`. Ea
 
 Example variable files are provided under:
 
-- `environments/azure/{dev,qa,staging,prod}.tfvars.example`
-- `environments/aws/{dev,qa,staging,prod}.tfvars.example`
-- `environments/gcp/{dev,qa,staging,prod}.tfvars.example`
+- `providers/azure/environment/{dev,qa,staging,prod}.tfvars.example`
+- `providers/aws/environment/{dev,qa,staging,prod}.tfvars.example`
+- `providers/gcp/environment/{dev,qa,staging,prod}.tfvars.example`
 
 Copy the appropriate example to a local `.tfvars` file and populate it. Real `.tfvars` and `.tfvars.json` files are ignored by Git. Keep provider IDs and infrastructure values in environment-specific configuration; keep credentials in the cloud secret manager or protected pipeline variables.
 
@@ -181,3 +181,9 @@ The CI workflow must pass `terraform fmt -check -recursive`, `terraform init -ba
 ## Next phase
 
 After the Infra product passes its independent acceptance matrix, integrate it into the Engineering Products Platform as a deployable, testable and marketplace-manageable product. Do not register it as complete based only on the module count or catalogue entry.
+
+## Environment-specific resource definitions
+
+Keep the environment-specific resource inventory in `providers/<cloud>/environment/{dev,qa,staging,prod}.tfvars`. The checked-in `.tfvars.example` files are templates only. Create real `.tfvars` files locally (they are gitignored) and pass them with `-var-file=environment/dev.tfvars`. For CI/CD, store the HCL file contents in the protected `TERRAFORM_TFVARS` environment secret/variable and materialize it only in the ephemeral runner workspace.
+
+For Azure, define one object per Web App in `azure_web_apps` and one object per database in `azure_sql_database`. Each item has a stable `key` independent from the Azure resource `name`. Use `service_plan_key` to share or select an App Service Plan, `user_assigned_identity_keys` to attach multiple managed identities, `key_vaults` to grant the app identity Key Vault Secrets User access, and `server_key` to associate each database with its SQL server. This scales to dozens of apps/databases while preserving predictable Terraform addresses. Use a separate plan/approval for production changes and retain the database/server deletion safeguards.
