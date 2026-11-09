@@ -168,7 +168,7 @@ variable "gcp_cloud_sql_database" {
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.gcp_cloud_sql_database : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.gcp_cloud_sql_database : item.key])) == length(var.gcp_cloud_sql_database)
+    condition = alltrue([for item in var.gcp_cloud_sql_database : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.gcp_cloud_sql_database : item.key] && alltrue([for item in var.gcp_cloud_sql_database : item.instance_name != null || (item.instance_key != null && contains([for instance in var.gcp_cloud_sql : instance.key], item.instance_key))]))) == length(var.gcp_cloud_sql_database)
     error_message = "Each gcp_cloud_sql_database item must have a unique non-empty key."
   }
 }
@@ -268,7 +268,7 @@ variable "gcp_gke" {
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.gcp_gke : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.gcp_gke : item.key])) == length(var.gcp_gke)
+    condition = alltrue([for item in var.gcp_gke : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.gcp_gke : item.key] && alltrue([for item in var.gcp_gke : (item.network_self_link != null || (item.vpc_key != null && contains([for vpc in var.gcp_vpc : vpc.key], item.vpc_key))) && (item.subnetwork_self_link != null || (item.subnet_key != null && contains([for subnet in var.gcp_subnet : subnet.key], item.subnet_key)))]))) == length(var.gcp_gke)
     error_message = "Each gcp_gke item must have a unique non-empty key."
   }
 }
@@ -357,7 +357,7 @@ variable "gcp_subnet" {
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.gcp_subnet : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.gcp_subnet : item.key])) == length(var.gcp_subnet)
+    condition = alltrue([for item in var.gcp_subnet : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.gcp_subnet : item.key] && alltrue([for item in var.gcp_subnet : item.network_self_link != null || (item.vpc_key != null && contains([for vpc in var.gcp_vpc : vpc.key], item.vpc_key))]))) == length(var.gcp_subnet)
     error_message = "Each gcp_subnet item must have a unique non-empty key."
   }
 }
