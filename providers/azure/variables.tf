@@ -31,22 +31,20 @@ variable "azure_sql_server_credentials" {
 }
 
 variable "azure_acr" {
-  description = "Typed list of acr resources. Each object has a stable key for Terraform state identity."
+  description = "Typed list of ACR resources with stable Terraform keys."
   type = list(object({
-    key = string
-    name = string
-    resource_group_name = string
-    location = string
-    sku = optional(string, "Premium")
+    key                           = string
+    name                          = string
+    resource_group_name           = string
+    location                      = string
+    sku                           = optional(string, "Premium")
     public_network_access_enabled = optional(bool, false)
-    tags = optional(map(string), {
-
-  })
+    tags                          = optional(map(string), {})
   }))
   default = []
   validation {
     condition = alltrue([for item in var.azure_acr : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_acr : item.key])) == length(var.azure_acr)
-    error_message = "Each azure_acr item must have a unique non-empty key."
+    error_message = "Each ACR item must have a unique non-empty key."
   }
 }
 
@@ -255,34 +253,33 @@ variable "azure_resource_group" {
   }
 }
 
-variable "azure_sql_database" {
-  description = "Repeatable Azure SQL database definitions. Each database has a stable key and can reference a server by server_key."
+
+
+
+
+variable "azure_sql_server" {
+  description = "Azure SQL servers. Credentials are injected separately from Key Vault and keyed by this stable Terraform key."
   type = list(object({
-    key                  = string
-    name                 = string
-    server_id            = optional(string)
-    server_key           = optional(string)
-    sku_name             = optional(string, "GP_S_Gen5_2")
-    zone_redundant        = optional(bool, true)
-    storage_account_type = optional(string, "Geo")
-    min_capacity         = optional(number, 0.5)
-    backup_retention_days = optional(number, 35)
-    tags                 = optional(map(string), {})
+    key                           = string
+    name                          = string
+    resource_group_name           = string
+    location                      = string
+    tags                          = optional(map(string), {})
+    sql_server_version            = optional(string, "12.0")
+    administrator_login           = optional(string)
+    administrator_login_password  = optional(string)
+    azuread_admin_login           = string
+    azuread_admin_object_id       = string
+    tenant_id                     = optional(string)
+    public_network_access_enabled = optional(bool, false)
+    prevent_destroy               = optional(bool, true)
   }))
   default = []
   validation {
-    condition = alltrue([
-      for database in var.azure_sql_database :
-      length(trimspace(database.key)) > 0 &&
-      length(trimspace(database.name)) > 0 &&
-      (database.server_id != null || database.server_key != null)
-    ]) && length(distinct([for database in var.azure_sql_database : database.key])) == length(var.azure_sql_database)
-      && length(distinct([for database in var.azure_sql_database : lower(database.name)])) == length(var.azure_sql_database)
-    error_message = "Each SQL database requires a unique key/name and either server_id or server_key."
+    condition = alltrue([for item in var.azure_sql_server : length(trimspace(item.key)) > 0 && length(trimspace(item.name)) > 0]) && length(distinct([for item in var.azure_sql_server : item.key])) == length(var.azure_sql_server)
+    error_message = "Each SQL server must have a unique non-empty key and name."
   }
 }
-
-
 
 variable "azure_storage_account" {
   description = "Typed list of storage_account resources. Each object has a stable key for Terraform state identity."
