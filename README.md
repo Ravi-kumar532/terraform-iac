@@ -52,7 +52,7 @@ resource address shifts.
 │       ├── versions.tf
 │       ├── bootstrap/
 │       └── module/
-├── environments/
+├── providers/<cloud>/environment/
 │   ├── aws/{dev,qa,staging,prod}.tfvars.example
 │   ├── azure/{dev,qa,staging,prod}.tfvars.example
 │   └── gcp/{dev,qa,staging,prod}.tfvars.example
@@ -69,7 +69,7 @@ resource address shifts.
 - `.github/workflows/terraform-ci.yml` formats and validates every module and provider root.
 - `.github/workflows/terraform-deploy.yml` supports OIDC plan/apply and confirmed destroy for Azure, AWS, and GCP.
 - `azure-pipelines.yml` provides an Azure DevOps Azure deployment path using a Workload Identity Federation service connection.
-- `dev`, `qa`, `staging`, and `prod` use separate backend keys/prefixes. Configure approval gates in GitHub Environments and Azure DevOps Environments.
+- `dev`, `qa`, `staging`, and `prod` use separate files under each provider's `environment/` folder and separate backend keys/prefixes. Configure approval gates in GitHub Environments and Azure DevOps Environments.
 - Secrets are injected from Azure Key Vault or Google Secret Manager where configured. AWS RDS uses managed master credentials. Never commit real `.tfvars`, credentials, state, or plan files.
 - Azure Key Vault uses RBAC by default and can receive role assignments for multiple system-assigned and user-assigned identities. Private endpoints can be wired to service resource IDs and private DNS zone IDs.
 - No cloud apply is run automatically by CI. A production plan, approval, and apply are explicit operator actions.
@@ -259,3 +259,16 @@ still appear in state; protect all state backends accordingly.
 - Review bootstrap retention and deletion behavior before managing state
   containing real workloads.
 - No cloud deployment is performed by this repository's CI pipelines.
+
+## Bulk resource input model
+
+Declare one object per resource in the relevant provider's environment tfvars file. For example, Azure `azure_web_apps` and `azure_sql_database` are typed lists of objects; add 20 entries without creating 20 module blocks. Each object has a stable `key` for Terraform state identity and a separate cloud resource `name`. Use `service_plan_key` and `server_key` to reference resources created in the same configuration, or pass existing resource IDs. This prevents resource identity from depending on list order or mutable display names.
+
+Local deployment example:
+
+```bash
+terraform -chdir=providers/azure init
+terraform -chdir=providers/azure plan -var-file=environment/dev.tfvars
+```
+
+Copy the matching `.tfvars.example` to `dev.tfvars` (or qa/staging/prod) and populate environment-specific values. Real `.tfvars` files are ignored by Git. CI/CD uses the protected `TERRAFORM_TFVARS` secret to create a temporary file at runtime. Do not put secret values in tfvars; use Key Vault, Secrets Manager, or Secret Manager and pass only secret references or protected runtime variables.
