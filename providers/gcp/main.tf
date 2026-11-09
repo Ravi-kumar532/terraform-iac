@@ -85,7 +85,7 @@ module "gcp_cloud_sql_database" {
   for_each = { for item in var.gcp_cloud_sql_database : item.key => item }
   project_id = try(each.value.project_id, var.project_id)
   name = try(each.value.name, null)
-  instance_name = try(each.value.instance_name, module.gcp_cloud_sql[each.value.instance_key].name)
+  instance_name = coalesce(try(each.value.instance_name, null), try(module.gcp_cloud_sql[each.value.instance_key].name, null))
   charset = try(each.value.charset, null)
   collation = try(each.value.collation, null)
   depends_on = [module.gcp_project]
@@ -136,8 +136,8 @@ module "gcp_gke" {
   project_id = try(each.value.project_id, var.project_id)
   name = try(each.value.name, null)
   region = try(each.value.region, null)
-  network_self_link = try(each.value.network_self_link, module.gcp_vpc[each.value.vpc_key].self_link)
-  subnetwork_self_link = try(each.value.subnetwork_self_link, module.gcp_subnet[each.value.subnet_key].self_link)
+  network_self_link = coalesce(try(each.value.network_self_link, null), try(module.gcp_vpc[each.value.vpc_key].self_link, null))
+  subnetwork_self_link = coalesce(try(each.value.subnetwork_self_link, null), try(module.gcp_subnet[each.value.subnet_key].self_link, null))
   pods_range_name = try(each.value.pods_range_name, null)
   services_range_name = try(each.value.services_range_name, null)
   private_endpoint = try(each.value.private_endpoint, null)
@@ -205,7 +205,7 @@ module "gcp_subnet" {
   project_id = try(each.value.project_id, var.project_id)
   name = try(each.value.name, null)
   region = try(each.value.region, null)
-  network_self_link = try(each.value.network_self_link, module.gcp_vpc[each.value.vpc_key].self_link)
+  network_self_link = coalesce(try(each.value.network_self_link, null), try(module.gcp_vpc[each.value.vpc_key].self_link, null))
   ip_cidr_range = try(each.value.ip_cidr_range, null)
   purpose = try(each.value.purpose, null)
   secondary_ip_ranges = try(each.value.secondary_ip_ranges, null)
