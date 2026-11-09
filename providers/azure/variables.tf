@@ -72,7 +72,7 @@ variable "azure_aks" {
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_aks : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_aks : item.key])) == length(var.azure_aks)
+    condition = alltrue([for item in var.azure_aks : length(trimspace(item.key)) > 0 && (item.subnet_id != null || (item.subnet_key != null && contains([for subnet in var.azure_subnet : subnet.key], item.subnet_key)))]) && length(distinct([for item in var.azure_aks : item.key])) == length(var.azure_aks)
     error_message = "Each azure_aks item must have a unique non-empty key."
   }
 }
@@ -157,7 +157,7 @@ variable "azure_function_app" {
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_function_app : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_function_app : item.key])) == length(var.azure_function_app)
+    condition = alltrue([for item in var.azure_function_app : length(trimspace(item.key)) > 0 && (item.service_plan_id != null || (item.service_plan_key != null && contains([for plan in var.azure_app_service : plan.key], item.service_plan_key))) && (item.storage_account_name != null || (item.storage_account_key != null && contains([for account in var.azure_storage_account : account.key], item.storage_account_key)))]) && length(distinct([for item in var.azure_function_app : item.key])) == length(var.azure_function_app)
     error_message = "Each azure_function_app item must have a unique non-empty key."
   }
 }
@@ -231,7 +231,7 @@ variable "azure_monitoring" {
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_monitoring : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_monitoring : item.key])) == length(var.azure_monitoring)
+    condition = alltrue([for item in var.azure_monitoring : length(trimspace(item.key)) > 0 && (item.aks_cluster_id != null || (item.aks_key != null && contains([for cluster in var.azure_aks : cluster.key], item.aks_key)))]) && length(distinct([for item in var.azure_monitoring : item.key])) == length(var.azure_monitoring)
     error_message = "Each azure_monitoring item must have a unique non-empty key."
   }
 }
@@ -278,7 +278,7 @@ variable "azure_sql_database" {
       for database in var.azure_sql_database :
       length(trimspace(database.key)) > 0 &&
       length(trimspace(database.name)) > 0 &&
-      (database.server_id != null || database.server_key != null)
+      (database.server_id != null || (database.server_key != null && contains([for server in var.azure_sql_server : server.key], database.server_key)))
     ]) && length(distinct([for database in var.azure_sql_database : database.key])) == length(var.azure_sql_database)
       && length(distinct([for database in var.azure_sql_database : lower("${coalesce(database.server_key, database.server_id, "missing")}:${database.name}")])) == length(var.azure_sql_database)
     error_message = "Each SQL database requires a unique key, unique name per server, and either server_id or server_key."
@@ -313,7 +313,7 @@ variable "azure_sql_database_defaults" {
   validation {
     condition = length(var.azure_sql_database_names) == 0 || (
       try(length(trimspace(var.azure_sql_database_defaults.server_id)) > 0, false) ||
-      try(length(trimspace(var.azure_sql_database_defaults.server_key)) > 0, false)
+      (try(length(trimspace(var.azure_sql_database_defaults.server_key)) > 0, false) && contains([for server in var.azure_sql_server : server.key], var.azure_sql_database_defaults.server_key))
     )
     error_message = "When azure_sql_database_names is non-empty, defaults must include server_id or server_key."
   }
@@ -385,7 +385,7 @@ variable "azure_subnet" {
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_subnet : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_subnet : item.key])) == length(var.azure_subnet)
+    condition = alltrue([for item in var.azure_subnet : length(trimspace(item.key)) > 0 && (item.virtual_network_name != null || (item.vnet_key != null && contains([for vnet in var.azure_vnet : vnet.key], item.vnet_key)))]) && length(distinct([for item in var.azure_subnet : item.key])) == length(var.azure_subnet)
     error_message = "Each azure_subnet item must have a unique non-empty key."
   }
 }
@@ -446,10 +446,12 @@ variable "azure_web_apps" {
       length(trimspace(app.name)) > 0 &&
       length(trimspace(app.resource_group_name)) > 0 &&
       length(trimspace(app.location)) > 0 &&
-      (app.service_plan_id != null || app.service_plan_key != null)
+      (app.service_plan_id != null || (app.service_plan_key != null && contains([for plan in var.azure_app_service : plan.key], app.service_plan_key)))
     ]) && length(distinct([for app in var.azure_web_apps : app.key])) == length(var.azure_web_apps)
       && length(distinct([for app in var.azure_web_apps : lower(app.name)])) == length(var.azure_web_apps)
-    error_message = "Each Web App requires a unique key/name, resource group, location, and either service_plan_id or service_plan_key."
+      && alltrue(flatten([for app in var.azure_web_apps : [for identity_key in app.user_assigned_identity_keys : contains([for identity in var.azure_managed_identity : identity.key], identity_key)]]))
+      && alltrue(flatten([for app in var.azure_web_apps : [for vault_key in app.key_vaults : contains([for vault in var.azure_key_vault : vault.key], vault_key)]]))
+    error_message = "Each Web App requires a unique key/name, valid service-plan reference, and valid managed identity and Key Vault references."
   }
 }
 variable "azure_web_app_names" {
@@ -495,7 +497,9 @@ variable "azure_web_app_defaults" {
     condition = length(var.azure_web_app_names) == 0 || (
       try(length(trimspace(var.azure_web_app_defaults.resource_group_name)) > 0, false) &&
       try(length(trimspace(var.azure_web_app_defaults.location)) > 0, false) &&
-      (try(length(trimspace(var.azure_web_app_defaults.service_plan_id)) > 0, false) || try(length(trimspace(var.azure_web_app_defaults.service_plan_key)) > 0, false))
+      (try(length(trimspace(var.azure_web_app_defaults.service_plan_id)) > 0, false) || (try(length(trimspace(var.azure_web_app_defaults.service_plan_key)) > 0, false) && contains([for plan in var.azure_app_service : plan.key], var.azure_web_app_defaults.service_plan_key)))
+      && alltrue([for identity_key in var.azure_web_app_defaults.user_assigned_identity_keys : contains([for identity in var.azure_managed_identity : identity.key], identity_key)])
+      && alltrue([for vault_key in var.azure_web_app_defaults.key_vaults : contains([for vault in var.azure_key_vault : vault.key], vault_key)])
     )
     error_message = "When azure_web_app_names is non-empty, defaults must include resource_group_name, location, and service_plan_id or service_plan_key."
   }
@@ -541,11 +545,13 @@ variable "azure_managed_identity" {
     resource_group_name = string
     location = string
     tags = optional(map(string), {})
+    key_vaults = optional(list(string), [])
+    key_vault_role = optional(string, "Key Vault Secrets User")
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_managed_identity : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_managed_identity : item.key])) == length(var.azure_managed_identity)
-    error_message = "Each azure_managed_identity item must have a unique non-empty key."
+    condition = alltrue([for item in var.azure_managed_identity : length(trimspace(item.key)) > 0 && alltrue([for vault_key in item.key_vaults : contains([for vault in var.azure_key_vault : vault.key], vault_key)])]) && length(distinct([for item in var.azure_managed_identity : item.key])) == length(var.azure_managed_identity)
+    error_message = "Each managed identity must have a unique key and may reference only declared Key Vault keys."
   }
 }
 
