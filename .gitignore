@@ -9,6 +9,7 @@ crash.*.log
 
 # Local variable files and secret material
 *.tfvars
+*.tfvars.json
 !*.example.tfvars
 *.auto.tfvars
 .env
