@@ -7,8 +7,7 @@ remote-state storage.
 > **Scope:** `providers/<cloud>/module/` contains reusable child modules only.
 > It does not contain workload root configurations, environment variable files,
 > or workload state backends.
-> GitHub Actions and Azure DevOps validate the modules and bootstrap roots;
-> they do not deploy infrastructure.
+> GitHub Actions validates the modules and bootstrap roots; it does not deploy infrastructure.
 
 ## Repository structure
 
