@@ -180,8 +180,8 @@ module "azure_sql_server" {
   location = try(each.value.location, null)
   tags = merge(local.azure_common_tags, try(each.value.tags, {}))
   sql_server_version = try(each.value.sql_server_version, null)
-  administrator_login = var.azure_sql_server_credentials[each.key].administrator_login
-  administrator_login_password = var.azure_sql_server_credentials[each.key].administrator_login_password
+  administrator_login = try(var.azure_sql_server_credentials[each.key].administrator_login, null)
+  administrator_login_password = try(var.azure_sql_server_credentials[each.key].administrator_login_password, null)
   azuread_admin_login = try(each.value.azuread_admin_login, null)
   azuread_admin_object_id = try(each.value.azuread_admin_object_id, null)
   tenant_id = try(each.value.tenant_id, var.tenant_id)
