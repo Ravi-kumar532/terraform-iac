@@ -8,6 +8,7 @@ locals {
       service_plan_id               = try(app.service_plan_id, module.azure_app_service[app.service_plan_key].id)
       public_network_access_enabled = try(app.public_network_access_enabled, false)
       integration_subnet_id         = try(app.integration_subnet_id, null)
+      identity_ids                  = concat(try(app.identity_ids, []), [for identity_key in try(app.user_assigned_identity_keys, []) : module.azure_managed_identity[identity_key].id])
       app_settings                  = try(app.app_settings, {})
       tags                          = merge(local.azure_common_tags, try(app.tags, {}))
       runtime                       = try(app.runtime, {})
@@ -107,13 +108,23 @@ module "azure_key_vault" {
   soft_delete_retention_days = try(each.value.soft_delete_retention_days, 90)
   access_policies = try(each.value.access_policies, {})
   tags = merge(local.azure_common_tags, try(each.value.tags, {}))
-  role_assignments = merge(try(each.value.role_assignments, {}), {
-    for app in var.azure_web_apps : "${app.name}-secrets-user" => {
-      principal_id         = module.azure_web_apps.identity_principal_ids[app.name]
-      role_definition_name = try(app.key_vault_role, "Key Vault Secrets User")
+  role_assignments = merge(
+    try(each.value.role_assignments, {}),
+    {
+      for app in var.azure_web_apps : "${app.name}-system-secrets-user" => {
+        principal_id         = module.azure_web_apps.identity_principal_ids[app.name]
+        role_definition_name = try(app.key_vault_role, "Key Vault Secrets User")
+      }
+      if contains(try(app.key_vaults, []), each.key)
+    },
+    {
+      for identity in var.azure_managed_identity : "${identity.key}-secrets-user" => {
+        principal_id         = module.azure_managed_identity[identity.key].principal_id
+        role_definition_name = try(identity.key_vault_role, "Key Vault Secrets User")
+      }
+      if contains(try(identity.key_vaults, []), each.key)
     }
-    if contains(try(app.key_vaults, []), each.key)
-  })
+  )
 }
 
 module "azure_logic_app" {
@@ -206,6 +217,30 @@ module "azure_vnet" {
   location = try(each.value.location, null)
   tags = merge(local.azure_common_tags, try(each.value.tags, {}))
   address_space = try(each.value.address_space, null)
+}
+
+module "azure_managed_identity" {
+  source   = "./module/managed_identity"
+  for_each = { for item in var.azure_managed_identity : item.key => item }
+  name                = try(each.value.name, null)
+  resource_group_name = try(each.value.resource_group_name, null)
+  location            = try(each.value.location, null)
+  tags                = merge(local.azure_common_tags, try(each.value.tags, {}))
+}
+
+module "azure_private_endpoint" {
+  source   = "./module/private_endpoint"
+  for_each = { for item in var.azure_private_endpoint : item.key => item }
+  name                           = try(each.value.name, null)
+  resource_group_name            = try(each.value.resource_group_name, null)
+  location                       = try(each.value.location, null)
+  subnet_id                      = try(each.value.subnet_id, null)
+  private_connection_resource_id = try(each.value.private_connection_resource_id, null)
+  subresource_names              = try(each.value.subresource_names, null)
+  is_manual_connection           = try(each.value.is_manual_connection, false)
+  request_message                = try(each.value.request_message, null)
+  private_dns_zone_ids           = try(each.value.private_dns_zone_ids, [])
+  tags                           = merge(local.azure_common_tags, try(each.value.tags, {}))
 }
 
 module "azure_web_apps" {
@@ -330,4 +365,16 @@ output "azure_web_apps_outputs" {
   description = "Outputs from every web_app module instance."
   sensitive   = true
   value = module.azure_web_apps
+}
+
+output "azure_managed_identity_outputs" {
+  description = "Outputs from all user-assigned managed identity instances."
+  sensitive   = true
+  value       = module.azure_managed_identity
+}
+
+output "azure_private_endpoint_outputs" {
+  description = "Outputs from all private endpoint instances."
+  sensitive   = true
+  value       = module.azure_private_endpoint
 }
