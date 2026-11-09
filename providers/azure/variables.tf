@@ -285,6 +285,40 @@ variable "azure_sql_database" {
   }
 }
 
+variable "azure_sql_database_names" {
+  description = "Convenience array of SQL database names sharing the defaults below. Use azure_sql_database objects for per-database overrides or stable keys independent of database names."
+  type        = list(string)
+  default     = []
+  validation {
+    condition = length(distinct([for name in var.azure_sql_database_names : lower(trimspace(name))])) == length(var.azure_sql_database_names)
+      && length(setintersection(toset([for name in var.azure_sql_database_names : lower(trimspace(name))]), toset([for database in var.azure_sql_database : lower(database.name)]))) == 0
+    error_message = "azure_sql_database_names must be unique and must not duplicate names in azure_sql_database."
+  }
+}
+
+variable "azure_sql_database_defaults" {
+  description = "Shared SQL Server association and database settings applied to every name in azure_sql_database_names."
+  type = object({
+    server_id             = optional(string)
+    server_key            = optional(string)
+    sku_name              = optional(string, "GP_S_Gen5_2")
+    zone_redundant         = optional(bool, true)
+    storage_account_type  = optional(string, "Geo")
+    min_capacity          = optional(number, 0.5)
+    backup_retention_days = optional(number, 35)
+    tags                  = optional(map(string), {})
+    prevent_destroy       = optional(bool, true)
+  })
+  default = {}
+  validation {
+    condition = length(var.azure_sql_database_names) == 0 || (
+      try(length(trimspace(var.azure_sql_database_defaults.server_id)) > 0, false) ||
+      try(length(trimspace(var.azure_sql_database_defaults.server_key)) > 0, false)
+    )
+    error_message = "When azure_sql_database_names is non-empty, defaults must include server_id or server_key."
+  }
+}
+
 variable "azure_sql_server" {
   description = "Azure SQL servers. Credentials are injected separately from Key Vault and keyed by this stable Terraform key."
   type = list(object({
@@ -418,6 +452,55 @@ variable "azure_web_apps" {
     error_message = "Each Web App requires a unique key/name, resource group, location, and either service_plan_id or service_plan_key."
   }
 }
+variable "azure_web_app_names" {
+  description = "Convenience array of Web App names for apps sharing the common defaults below. Use azure_web_apps objects when apps need per-app overrides or stable keys independent of Azure names."
+  type        = list(string)
+  default     = []
+  validation {
+    condition = length(distinct([for name in var.azure_web_app_names : lower(trimspace(name))])) == length(var.azure_web_app_names)
+      && length(setintersection(toset([for name in var.azure_web_app_names : lower(trimspace(name))]), toset([for app in var.azure_web_apps : lower(app.name)]))) == 0
+    error_message = "azure_web_app_names must be unique and must not duplicate names in azure_web_apps."
+  }
+}
+
+variable "azure_web_app_defaults" {
+  description = "Shared configuration applied to each name in azure_web_app_names. Resource group, location, and a service plan ID or key are required when the names array is non-empty."
+  type = object({
+    resource_group_name           = optional(string)
+    location                      = optional(string)
+    service_plan_id               = optional(string)
+    service_plan_key              = optional(string)
+    public_network_access_enabled = optional(bool, false)
+    integration_subnet_id         = optional(string)
+    identity_ids                  = optional(list(string), [])
+    user_assigned_identity_keys   = optional(list(string), [])
+    key_vaults                    = optional(list(string), [])
+    key_vault_role                = optional(string, "Key Vault Secrets User")
+    prevent_destroy               = optional(bool, true)
+    app_settings                  = optional(map(string), {})
+    tags                          = optional(map(string), {})
+    runtime = optional(object({
+      python_version      = optional(string)
+      node_version        = optional(string)
+      php_version         = optional(string)
+      dotnet_version      = optional(string)
+      ruby_version        = optional(string)
+      java_version        = optional(string)
+      java_server         = optional(string)
+      java_server_version = optional(string)
+    }), {})
+  })
+  default = {}
+  validation {
+    condition = length(var.azure_web_app_names) == 0 || (
+      try(length(trimspace(var.azure_web_app_defaults.resource_group_name)) > 0, false) &&
+      try(length(trimspace(var.azure_web_app_defaults.location)) > 0, false) &&
+      (try(length(trimspace(var.azure_web_app_defaults.service_plan_id)) > 0, false) || try(length(trimspace(var.azure_web_app_defaults.service_plan_key)) > 0, false))
+    )
+    error_message = "When azure_web_app_names is non-empty, defaults must include resource_group_name, location, and service_plan_id or service_plan_key."
+  }
+}
+
 variable "azure_service_bus_namespaces" {
   description = "Repeatable Service Bus namespaces with keyed queues and topics."
   type = list(object({
