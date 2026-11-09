@@ -17,17 +17,34 @@ azure_key_vault = [
 azure_managed_identity = [
   { key = "web-mi", name = "REPLACE_WITH_DEV_WEB_IDENTITY", resource_group_name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION", key_vaults = ["app-secrets"] }
 ]
-azure_web_apps = [
-  { key = "web-one", name = "REPLACE_WITH_DEV_WEB_APP_ONE", resource_group_name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION", service_plan_key = "web-plan", user_assigned_identity_keys = ["web-mi"], key_vaults = ["app-secrets"], runtime = { node_version = "20-lts" }, app_settings = { APP_ENV = "dev", DB_PASSWORD = "@Microsoft.KeyVault(SecretUri=REPLACE_WITH_SECRET_URI)" } },
-  { key = "web-two", name = "REPLACE_WITH_DEV_WEB_APP_TWO", resource_group_name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION", service_plan_key = "web-plan", user_assigned_identity_keys = ["web-mi"], key_vaults = ["app-secrets"], runtime = { python_version = "3.12" } }
+azure_web_apps = []
+azure_web_app_names = [
+  "REPLACE_WITH_DEV_WEB_APP_ONE",
+  "REPLACE_WITH_DEV_WEB_APP_TWO"
 ]
+azure_web_app_defaults = {
+  resource_group_name         = "REPLACE_WITH_DEV_RESOURCE_GROUP"
+  location                    = "REPLACE_WITH_AZURE_REGION"
+  service_plan_key            = "web-plan"
+  user_assigned_identity_keys = ["web-mi"]
+  key_vaults                  = ["app-secrets"]
+  runtime                     = { node_version = "20-lts" }
+  app_settings                = { APP_ENV = "dev", DB_PASSWORD = "@Microsoft.KeyVault(SecretUri=REPLACE_WITH_SECRET_URI)" }
+}
+
+
 azure_sql_server = [
   { key = "sql-primary", name = "REPLACE_WITH_DEV_SQL_SERVER", resource_group_name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION", azuread_admin_login = "REPLACE_WITH_ENTRA_ADMIN_DISPLAY_NAME", azuread_admin_object_id = "REPLACE_WITH_ENTRA_ADMIN_OBJECT_ID", public_network_access_enabled = false }
 ]
-azure_sql_database = [
-  { key = "orders-db", name = "orders", server_key = "sql-primary", sku_name = "GP_S_Gen5_2", zone_redundant = false },
-  { key = "billing-db", name = "billing", server_key = "sql-primary", sku_name = "GP_S_Gen5_2", zone_redundant = false }
-]
+azure_sql_database = []
+azure_sql_database_names = ["orders", "billing"]
+azure_sql_database_defaults = {
+  server_key            = "sql-primary"
+  sku_name              = "GP_S_Gen5_2"
+  zone_redundant        = false
+  backup_retention_days = 35
+}
+
 
 # Add further resources by appending objects with unique keys. Do not use list indexes as identity.
 azure_acr = []
