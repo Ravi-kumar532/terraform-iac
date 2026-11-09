@@ -67,7 +67,7 @@ variable "azure_aks" {
     node_count = optional(number, 3)
     min_count = optional(number, 3)
     max_count = optional(number, 10)
-    subnet_id = optional(string, null)
+    subnet_id = optional(string)
     subnet_key = optional(string)
   }))
   default = []
@@ -147,8 +147,8 @@ variable "azure_function_app" {
     tags = optional(map(string), {
 
   })
-    service_plan_id = string
-    storage_account_name = string
+    service_plan_id = optional(string)
+    storage_account_name = optional(string)
     python_version = optional(string, "3.11")
     integration_subnet_id = optional(string, null)
     public_network_access_enabled = optional(bool, false)
@@ -225,7 +225,7 @@ variable "azure_monitoring" {
     name = string
     resource_group_name = string
     location = string
-    aks_cluster_id = string
+    aks_cluster_id = optional(string)
     tags = optional(map(string), {})
     aks_key = optional(string)
   }))
@@ -344,7 +344,7 @@ variable "azure_subnet" {
     key = string
     name = string
     resource_group_name = string
-    virtual_network_name = string
+    virtual_network_name = optional(string)
     address_prefixes = list(string)
     service_endpoints = optional(list(string), [])
     vnet_key = optional(string)
