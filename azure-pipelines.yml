@@ -91,13 +91,13 @@ stages:
                       export TF_VAR_subscription_id="$AZURE_SUBSCRIPTION_ID"
                       export TF_VAR_client_id="$servicePrincipalId"
 
-                      if [[ -z "$TERRAFORM_TFVARS" ]]; then
-                        echo "TERRAFORM_TFVARS must contain the HCL contents of the selected environment tfvars file."
+                      if [[ -z "$TERRAFORM_TFVARS_AZURE" ]]; then
+                        echo "TERRAFORM_TFVARS_AZURE must contain the HCL contents of the selected environment tfvars file."
                         exit 1
                       fi
 
                       input_file="$AGENT_TEMPDIRECTORY/azure-${{ parameters.environment }}.tfvars"
-                      printf '%s' "$TERRAFORM_TFVARS" > "$input_file"
+                      printf '%s' "$TERRAFORM_TFVARS_AZURE" > "$input_file"
                       chmod 600 "$input_file"
 
                       if [[ -n "$AZURE_SQL_CREDENTIALS_SECRET" ]]; then
@@ -134,7 +134,7 @@ stages:
                         terraform -chdir=providers/azure destroy -input=false -auto-approve -no-color -var-file="$input_file"
                       fi
                   env:
-                    TERRAFORM_TFVARS: $(TERRAFORM_TFVARS)
+                    TERRAFORM_TFVARS_AZURE: $(TERRAFORM_TFVARS_AZURE)
                     TFSTATE_RESOURCE_GROUP: $(TFSTATE_RESOURCE_GROUP)
                     TFSTATE_STORAGE_ACCOUNT: $(TFSTATE_STORAGE_ACCOUNT)
                     TFSTATE_CONTAINER: $(TFSTATE_CONTAINER)
