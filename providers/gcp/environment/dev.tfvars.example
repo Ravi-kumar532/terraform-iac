@@ -1,0 +1,22 @@
+# Copy to dev.tfvars (gitignored). Configure Workload Identity Federation and remote-state bootstrap separately.
+environment = "dev"
+project_id = "REPLACE_WITH_GCP_PROJECT_ID"
+region = "REPLACE_WITH_GCP_REGION"
+common_labels = { managed_by = "terraform", environment = "dev" }
+gcp_monitoring_credentials = {}
+gcp_app_engine = []
+gcp_artifact_registry = []
+gcp_cloud_functions = []
+gcp_cloud_run = []
+gcp_cloud_sql = []
+gcp_cloud_sql_database = []
+gcp_cloud_storage = []
+gcp_eventarc = []
+gcp_firestore = []
+gcp_gke = []
+gcp_monitoring = []
+gcp_project = []
+gcp_pubsub = []
+gcp_subnet = []
+gcp_vpc = []
+gcp_workflows = []
