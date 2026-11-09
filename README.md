@@ -282,4 +282,4 @@ terraform -chdir=providers/azure init
 terraform -chdir=providers/azure plan -var-file=environment/dev.tfvars
 ```
 
-Copy the matching `.tfvars.example` to `dev.tfvars` (or qa/staging/prod) and populate environment-specific values. Real `.tfvars` files are ignored by Git. CI/CD uses the protected `TERRAFORM_TFVARS` secret to create a temporary file at runtime. Do not put secret values in tfvars; use Key Vault, Secrets Manager, or Secret Manager and pass only secret references or protected runtime variables.
+Copy the matching `.tfvars.example` to `dev.tfvars` (or qa/staging/prod) and populate environment-specific values. Real `.tfvars` files are ignored by Git. CI/CD uses the protected `TERRAFORM_TFVARS_AZURE`, `TERRAFORM_TFVARS_AWS`, and `TERRAFORM_TFVARS_GCP` secret to create a temporary file at runtime. Do not put secret values in tfvars; use Key Vault, Secrets Manager, or Secret Manager and pass only secret references or protected runtime variables.
