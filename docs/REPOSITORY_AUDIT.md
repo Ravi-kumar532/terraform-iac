@@ -20,15 +20,15 @@ Each module directory currently follows a conventional split of Terraform resour
 
 ## Current working-branch progress
 
-The current working branch adds deployable composition roots under `providers/aws`, `providers/azure`, and `providers/gcp`. All 49 original module directories are wired into their provider root `main.tf`; two additional Azure modules (`managed_identity` and `private_endpoint`) bring the current module count to 51. The Azure root connects Web App system/user-assigned identities to Key Vault RBAC and supports multiple SQL databases referencing a server key. Environment examples exist for dev, qa, staging, and prod.
+The current working branch turns the original child-module library into deployable provider roots under `providers/aws`, `providers/azure`, and `providers/gcp`. All 49 original module directories are wired into their provider root `main.tf`; two additional Azure modules (`managed_identity` and `private_endpoint`) bring the current module count to 51. All provider-root resource inputs are typed object arrays with stable keys; no root uses `list(any)`. Each provider has its own `bootstrap/`, `environment/`, and `module/` directories, with dev, qa, staging, and prod tfvars examples.
+
+Azure now supports both object arrays (explicit stable key plus resource name) and shorthand name arrays for bulk Web App and SQL database creation. Shared defaults, cross-module key validation, null-safe ID/key resolution, multi-identity attachment, Key Vault RBAC, and explicit Web App/SQL deletion safeguards are included. Secrets are injected from Key Vault/Secret Manager at runtime rather than committed in tfvars. GitHub Actions has per-cloud protected tfvars secrets and OIDC/WIF plan/apply/destroy paths; Azure DevOps has an Azure WIF path.
 
 GitHub Actions now has separate validation and OIDC deployment workflows. The Azure DevOps pipeline currently covers Azure through a Workload Identity Federation service connection. No cloud plan/apply has been run. The CI runner initialization failure recorded in the first PR attempt remains an infrastructure/runner verification issue until a workflow run exposes its steps.
 
 ## Confirmed repository boundaries
 
-The current README defines this repository as a **reusable child-module library**. It explicitly excludes workload root configurations, workload state backends, and environment variable files. Therefore, the absence of a single repository-wide root `main.tf` is consistent with the documented library design; it is not proof that all child modules have been composed into deployable workloads.
-
-The module catalogue is not, by itself, a deployable multi-cloud Infra product. A consuming root must select and connect modules, configure identity and state, supply validated inputs, and define lifecycle and operational controls.
+At the original baseline, the README defined the repository as a **reusable child-module library** and excluded workload root configurations. This was the reason a deployable product was not yet present. The current branch changes that scope by composing every module into a provider-specific workload root and adding environment and deployment workflows. A single repository-wide root `main.tf` is intentionally avoided: each cloud root is independently initialized and has separate provider authentication and state.
 
 ## Initial gaps verified from the Git tree
 
@@ -37,7 +37,7 @@ The module catalogue is not, by itself, a deployable multi-cloud Infra product. 
 - No GitHub Actions workflow was present in the baseline tree. Validation and deployment workflows are now present on this work branch.
 - No Azure Pipelines YAML was present in the baseline tree. An Azure DevOps Azure deployment pipeline is now present on this work branch.
 - The baseline tree did not contain a root `.gitignore`.
-- The validation script initializes and validates each provider module and bootstrap root, but does not provision cloud resources or prove runtime behavior.
+- The validation script initializes and validates each provider module, bootstrap root, and provider composition root, and syntax-checks environment tfvars examples. It does not provision cloud resources or prove runtime behavior.
 - No real cloud deployment has been run as part of this audit. Provider credentials, state backends, cost approval, and environment-specific network/security decisions are required before any apply.
 
 ## Acceptance rule
@@ -55,4 +55,4 @@ Do not mark the Infra product complete merely because modules exist or a catalog
 
 ## Status
 
-This is an initial structural audit plus a work-branch progress record, not a claim that all 51 modules have passed code review or Terraform validation. The production acceptance gates in `docs/PRODUCTION_GRADE_INFRASTRUCTURE.md` remain open until CI, security, sandbox deployment, recovery, and operational tests pass.
+This is an initial structural audit plus a work-branch progress record, not a claim that all 51 modules have passed code review or Terraform validation. The latest GitHub Actions run fails before the job exposes steps or a logs URL; therefore Terraform formatting/validation has not yet run successfully. The production acceptance gates in `docs/PRODUCTION_GRADE_INFRASTRUCTURE.md` remain open until runner initialization is restored and CI, security, sandbox deployment, recovery, and operational tests pass.
