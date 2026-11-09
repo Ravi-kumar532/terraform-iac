@@ -91,15 +91,14 @@ stages:
                       export TF_VAR_subscription_id="$AZURE_SUBSCRIPTION_ID"
                       export TF_VAR_client_id="$servicePrincipalId"
 
-                      if [[ -z "$TERRAFORM_INPUTS_JSON" ]]; then
-                        echo "TERRAFORM_INPUTS_JSON must contain the non-secret module input arrays."
+                      if [[ -z "$TERRAFORM_TFVARS" ]]; then
+                        echo "TERRAFORM_TFVARS must contain the HCL contents of the selected environment tfvars file."
                         exit 1
                       fi
 
-                      input_file="$AGENT_TEMPDIRECTORY/terraform.tfvars.json"
-                      printf '%s' "$TERRAFORM_INPUTS_JSON" > "$input_file"
+                      input_file="$AGENT_TEMPDIRECTORY/azure-${{ parameters.environment }}.tfvars"
+                      printf '%s' "$TERRAFORM_TFVARS" > "$input_file"
                       chmod 600 "$input_file"
-                      jq -e 'type == "object"' "$input_file" >/dev/null
 
                       if [[ -n "$AZURE_SQL_CREDENTIALS_SECRET" ]]; then
                         sql_credentials="$(az keyvault secret show \
@@ -135,7 +134,7 @@ stages:
                         terraform -chdir=providers/azure destroy -input=false -auto-approve -no-color -var-file="$input_file"
                       fi
                   env:
-                    TERRAFORM_INPUTS_JSON: $(TERRAFORM_INPUTS_JSON)
+                    TERRAFORM_TFVARS: $(TERRAFORM_TFVARS)
                     TFSTATE_RESOURCE_GROUP: $(TFSTATE_RESOURCE_GROUP)
                     TFSTATE_STORAGE_ACCOUNT: $(TFSTATE_STORAGE_ACCOUNT)
                     TFSTATE_CONTAINER: $(TFSTATE_CONTAINER)
