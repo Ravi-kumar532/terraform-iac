@@ -1,12 +1,28 @@
 variable "environment" {
   description = "Deployment environment; each environment uses a distinct remote state key and approval boundary."
-  type = string
-  validation { condition = contains(["dev", "qa", "staging", "prod"], var.environment) error_message = "environment must be dev, qa, staging, or prod." }
+  type        = string
+  validation {
+    condition     = contains(["dev", "qa", "staging", "prod"], var.environment)
+    error_message = "environment must be dev, qa, staging, or prod."
+  }
 }
-variable "tenant_id" { type = string; description = "Microsoft Entra tenant ID." }
-variable "subscription_id" { type = string; description = "Azure subscription ID." }
-variable "client_id" { type = string; description = "OIDC federated deployment application/client ID." }
-variable "common_tags" { type = map(string); default = {}; description = "Common resource tags merged with per-resource tags." }
+variable "tenant_id" {
+  type = string
+  description = "Microsoft Entra tenant ID."
+}
+variable "subscription_id" {
+  type = string
+  description = "Azure subscription ID."
+}
+variable "client_id" {
+  type = string
+  description = "OIDC federated deployment application/client ID."
+}
+variable "common_tags" {
+  type = map(string)
+  default = {}
+  description = "Common resource tags merged with per-resource tags."
+}
 variable "azure_sql_server_credentials" {
   description = "SQL administrator credentials injected by the secret manager at deployment time; never commit values."
   type = map(object({ administrator_login = string, administrator_login_password = string }))
