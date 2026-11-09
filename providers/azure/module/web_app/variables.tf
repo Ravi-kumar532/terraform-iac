@@ -10,6 +10,7 @@ variable "apps" {
     integration_subnet_id         = optional(string)
     app_settings                  = optional(map(string), {})
     identity_ids                  = optional(list(string), [])
+    prevent_destroy               = optional(bool, true)
     tags                          = optional(map(string), {})
     runtime = optional(object({
       python_version      = optional(string)
