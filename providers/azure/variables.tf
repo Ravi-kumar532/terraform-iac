@@ -282,30 +282,7 @@ variable "azure_sql_database" {
   }
 }
 
-variable "azure_sql_server" {
-  description = "Typed list of sql_server resources. Each object has a stable key for Terraform state identity."
-  type = list(object({
-    key = string
-    name = string
-    resource_group_name = string
-    location = string
-    tags = optional(map(string), {
 
-  })
-    sql_server_version = optional(string, "12.0")
-    administrator_login = string
-    administrator_login_password = string
-    azuread_admin_login = string
-    azuread_admin_object_id = string
-    tenant_id = string
-    public_network_access_enabled = optional(bool, false)
-  }))
-  default = []
-  validation {
-    condition = alltrue([for item in var.azure_sql_server : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_sql_server : item.key])) == length(var.azure_sql_server)
-    error_message = "Each azure_sql_server item must have a unique non-empty key."
-  }
-}
 
 variable "azure_storage_account" {
   description = "Typed list of storage_account resources. Each object has a stable key for Terraform state identity."
@@ -388,6 +365,7 @@ variable "azure_web_apps" {
     user_assigned_identity_keys   = optional(list(string), [])
     key_vaults                    = optional(list(string), [])
     key_vault_role                = optional(string, "Key Vault Secrets User")
+    prevent_destroy               = optional(bool, true)
     app_settings                  = optional(map(string), {})
     tags                          = optional(map(string), {})
     runtime = optional(object({
@@ -416,12 +394,34 @@ variable "azure_web_apps" {
   }
 }
 variable "azure_service_bus_namespaces" {
-  description = "Array of Service Bus namespace definitions; each item requires a unique key."
-  type = list(any)
+  description = "Repeatable Service Bus namespaces with keyed queues and topics."
+  type = list(object({
+    key                           = string
+    name                          = string
+    resource_group_name           = string
+    location                      = string
+    sku                           = optional(string, "Premium")
+    capacity                      = optional(number, 1)
+    public_network_access_enabled = optional(bool, false)
+    tags                          = optional(map(string), {})
+    queues = optional(map(object({
+      name                                    = string
+      lock_duration                           = optional(string, "PT1M")
+      max_delivery_count                      = optional(number, 10)
+      dead_lettering_on_message_expiration    = optional(bool, true)
+      requires_duplicate_detection            = optional(bool, true)
+      duplicate_detection_history_time_window = optional(string, "PT10M")
+    })), {})
+    topics = optional(map(object({
+      name                                    = string
+      requires_duplicate_detection            = optional(bool, true)
+      duplicate_detection_history_time_window = optional(string, "PT10M")
+    })), {})
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_service_bus_namespaces : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_service_bus_namespaces : try(item.key, "")])) == length(var.azure_service_bus_namespaces)
-    error_message = "Each Service Bus namespace item must have a unique non-empty key."
+    condition = alltrue([for item in var.azure_service_bus_namespaces : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_service_bus_namespaces : item.key])) == length(var.azure_service_bus_namespaces)
+    error_message = "Each Service Bus namespace must have a unique non-empty key."
   }
 }
 
