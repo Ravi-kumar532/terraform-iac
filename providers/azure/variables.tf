@@ -194,3 +194,23 @@ variable "azure_service_bus_namespaces" {
     error_message = "Each Service Bus namespace item must have a unique non-empty key."
   }
 }
+
+variable "azure_managed_identity" {
+  description = "Array of user-assigned managed identities. key_vaults lists Azure Key Vault input keys that should grant this identity access."
+  type = list(any)
+  default = []
+  validation {
+    condition = alltrue([for item in var.azure_managed_identity : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_managed_identity : try(item.key, "")])) == length(var.azure_managed_identity)
+    error_message = "Each managed identity item must have a unique non-empty key."
+  }
+}
+
+variable "azure_private_endpoint" {
+  description = "Array of private endpoints. Supply target resource IDs, endpoint subnet IDs, subresource names, and private DNS zone IDs."
+  type = list(any)
+  default = []
+  validation {
+    condition = alltrue([for item in var.azure_private_endpoint : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_private_endpoint : try(item.key, "")])) == length(var.azure_private_endpoint)
+    error_message = "Each private endpoint item must have a unique non-empty key."
+  }
+}
