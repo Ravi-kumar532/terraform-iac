@@ -16,7 +16,7 @@ remote-state storage.
 .
 ├── .github/
 │   └── workflows/
-│       └── terraform-ci-cd.yml
+│       └── terraform-validate.yml
 ├── providers/
 │   ├── aws/
 │   │   ├── bootstrap/       # S3 state bucket and DynamoDB lock table
