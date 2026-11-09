@@ -1,0 +1,40 @@
+name: Terraform validation
+
+on:
+  pull_request:
+    paths:
+      - "providers/**"
+      - "scripts/**"
+      - ".github/workflows/terraform-validate.yml"
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Terraform configurations
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+          terraform_wrapper: false
+
+      - name: Verify Terraform CLI
+        run: terraform version
+
+      - name: Validate every provider module and bootstrap root
+        run: bash scripts/terraform-validate.sh
