@@ -97,6 +97,8 @@ stages:
                       fi
 
                       input_file="$AGENT_TEMPDIRECTORY/azure-${{ parameters.environment }}.tfvars"
+                      plan_file="$AGENT_TEMPDIRECTORY/terraform.tfplan"
+                      trap 'rm -f "$input_file" "$plan_file"' EXIT
                       printf '%s' "$TERRAFORM_TFVARS_AZURE" > "$input_file"
                       chmod 600 "$input_file"
 
@@ -122,10 +124,10 @@ stages:
 
                       terraform -chdir=providers/azure validate -no-color
                       terraform -chdir=providers/azure plan -input=false -no-color \
-                        -var-file="$input_file" -out="$AGENT_TEMPDIRECTORY/terraform.tfplan"
+                        -var-file="$input_file" -out="$plan_file"
 
                       if [[ "${{ parameters.action }}" == "apply" ]]; then
-                        terraform -chdir=providers/azure apply -input=false -no-color "$AGENT_TEMPDIRECTORY/terraform.tfplan"
+                        terraform -chdir=providers/azure apply -input=false -no-color "$plan_file"
                       elif [[ "${{ parameters.action }}" == "destroy" ]]; then
                         if [[ "${{ parameters.confirmDestroy }}" != "DESTROY" ]]; then
                           echo "Destroy requires confirmDestroy=DESTROY and approval of the Azure DevOps environment."
