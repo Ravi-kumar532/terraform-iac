@@ -18,6 +18,12 @@ The baseline Git tree contains 214 tracked files:
 
 Each module directory currently follows a conventional split of Terraform resources, variables, outputs, and provider/version constraints. The three bootstrap roots provision provider-specific remote-state infrastructure.
 
+## Current working-branch progress
+
+The current working branch adds deployable composition roots under `providers/aws`, `providers/azure`, and `providers/gcp`. All 49 original module directories are wired into their provider root `main.tf`; two additional Azure modules (`managed_identity` and `private_endpoint`) bring the current module count to 51. The Azure root connects Web App system/user-assigned identities to Key Vault RBAC and supports multiple SQL databases referencing a server key. Environment examples exist for dev, qa, staging, and prod.
+
+GitHub Actions now has separate validation and OIDC deployment workflows. The Azure DevOps pipeline currently covers Azure through a Workload Identity Federation service connection. No cloud plan/apply has been run. The CI runner initialization failure recorded in the first PR attempt remains an infrastructure/runner verification issue until a workflow run exposes its steps.
+
 ## Confirmed repository boundaries
 
 The current README defines this repository as a **reusable child-module library**. It explicitly excludes workload root configurations, workload state backends, and environment variable files. Therefore, the absence of a single repository-wide root `main.tf` is consistent with the documented library design; it is not proof that all child modules have been composed into deployable workloads.
@@ -26,10 +32,10 @@ The module catalogue is not, by itself, a deployable multi-cloud Infra product. 
 
 ## Initial gaps verified from the Git tree
 
-- No provider-specific workload composition roots or environment stacks are present.
+- At the original baseline, no provider-specific workload composition roots or environment stacks were present; these are now being added on the working branch.
 - No automated module unit/contract test directories are present in the baseline tree.
-- No GitHub Actions workflow was present in the baseline tree. A validation workflow is being added on this work branch.
-- No Azure Pipelines YAML was present in the baseline tree, despite the README describing an Azure DevOps pipeline.
+- No GitHub Actions workflow was present in the baseline tree. Validation and deployment workflows are now present on this work branch.
+- No Azure Pipelines YAML was present in the baseline tree. An Azure DevOps Azure deployment pipeline is now present on this work branch.
 - The baseline tree did not contain a root `.gitignore`.
 - The validation script initializes and validates each provider module and bootstrap root, but does not provision cloud resources or prove runtime behavior.
 - No real cloud deployment has been run as part of this audit. Provider credentials, state backends, cost approval, and environment-specific network/security decisions are required before any apply.
@@ -49,4 +55,4 @@ Do not mark the Infra product complete merely because modules exist or a catalog
 
 ## Status
 
-This is an initial structural audit, not a claim that all 49 modules have passed code review or Terraform validation. Findings must be updated as each module is inspected and tested.
+This is an initial structural audit plus a work-branch progress record, not a claim that all 51 modules have passed code review or Terraform validation. The production acceptance gates in `docs/PRODUCTION_GRADE_INFRASTRUCTURE.md` remain open until CI, security, sandbox deployment, recovery, and operational tests pass.
