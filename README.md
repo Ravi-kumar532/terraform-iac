@@ -14,9 +14,6 @@ remote-state storage.
 
 ```text
 .
-├── .azure/
-│   └── pipelines/
-│       └── terraform.yml
 ├── .github/
 │   └── workflows/
 │       └── terraform-ci-cd.yml
@@ -30,6 +27,9 @@ remote-state storage.
 │   └── gcp/
 │       ├── bootstrap/       # Versioned Cloud Storage state bucket
 │       └── module/          # Reusable Google Cloud service modules
+├── .gitignore
+├── docs/
+│   └── REPOSITORY_AUDIT.md
 ├── scripts/
 │   └── terraform-validate.sh
 └── README.md
