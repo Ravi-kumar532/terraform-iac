@@ -8,6 +8,7 @@ variable "apps" {
     public_network_access_enabled = optional(bool, false)
     integration_subnet_id         = optional(string)
     app_settings                  = optional(map(string), {})
+    identity_ids                  = optional(list(string), [])
     tags                          = optional(map(string), {})
     runtime = optional(object({
       python_version      = optional(string)
