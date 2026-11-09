@@ -291,7 +291,7 @@ variable "azure_sql_database_names" {
   default     = []
   validation {
     condition = length(distinct([for name in var.azure_sql_database_names : lower(trimspace(name))])) == length(var.azure_sql_database_names)
-      && length(setintersection(toset([for name in var.azure_sql_database_names : lower(trimspace(name))]), toset([for database in var.azure_sql_database : lower(database.name)]))) == 0
+      && length(setintersection(toset([for name in var.azure_sql_database_names : lower(trimspace(name))]), toset(concat([for database in var.azure_sql_database : lower(database.name)], [for database in var.azure_sql_database : lower(database.key)])))) == 0
     error_message = "azure_sql_database_names must be unique and must not duplicate names in azure_sql_database."
   }
 }
@@ -458,7 +458,7 @@ variable "azure_web_app_names" {
   default     = []
   validation {
     condition = length(distinct([for name in var.azure_web_app_names : lower(trimspace(name))])) == length(var.azure_web_app_names)
-      && length(setintersection(toset([for name in var.azure_web_app_names : lower(trimspace(name))]), toset([for app in var.azure_web_apps : lower(app.name)]))) == 0
+      && length(setintersection(toset([for name in var.azure_web_app_names : lower(trimspace(name))]), toset(concat([for app in var.azure_web_apps : lower(app.name)], [for app in var.azure_web_apps : lower(app.key)])))) == 0
     error_message = "azure_web_app_names must be unique and must not duplicate names in azure_web_apps."
   }
 }
