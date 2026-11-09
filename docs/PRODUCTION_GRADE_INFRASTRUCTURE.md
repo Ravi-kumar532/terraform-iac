@@ -113,6 +113,42 @@ azure_sql_database = [
 - SQL database entries reference a SQL server by `server_key`; the root wires the server ID. Add one object per database; a single server can host many databases and the same database name may be reused on different servers when the stable keys differ. SQL administrator credentials are stored in a Key Vault secret as a JSON map keyed by SQL server Terraform key, for example `{"sql-primary":{"administrator_login":"...","administrator_login_password":"..."}}`, and injected into the sensitive `azure_sql_server_credentials` variable at runtime. Do not add this map to the environment tfvars file: `-var-file` values take precedence over `TF_VAR_*` environment variables.
 - App settings should contain Key Vault reference URIs, never literal secret values.
 
+### Bulk name arrays for large estates
+
+When many apps share the same baseline configuration, use the concise names-array interface. This creates one Web App per name and applies the shared defaults. The same pattern supports 20, 50, or more names without adding more module blocks.
+
+```hcl
+azure_web_app_names = [
+  "web-01", "web-02", "web-03", "web-04", "web-05",
+  "web-06", "web-07", "web-08", "web-09", "web-10",
+  "web-11", "web-12", "web-13", "web-14", "web-15",
+  "web-16", "web-17", "web-18", "web-19", "web-20"
+]
+
+azure_web_app_defaults = {
+  resource_group_name         = "REPLACE_WITH_RESOURCE_GROUP"
+  location                    = "REPLACE_WITH_REGION"
+  service_plan_key            = "web-plan"
+  user_assigned_identity_keys = ["web-mi"]
+  key_vaults                  = ["app-secrets"]
+  runtime                     = { node_version = "20-lts" }
+  app_settings                = { APP_ENV = "prod" }
+}
+
+azure_sql_database_names = [
+  "orders", "billing", "inventory", "customers", "reporting"
+]
+
+azure_sql_database_defaults = {
+  server_key            = "sql-primary"
+  sku_name              = "GP_S_Gen5_2"
+  zone_redundant        = true
+  backup_retention_days = 35
+}
+```
+
+The names-array shorthand intentionally uses each resource name as its Terraform key. If resource names may change, or if individual apps/databases need different plans, servers, SKUs, networks, identities, or settings, use the object-array form above with an explicit immutable `key` separate from the cloud resource `name`. Do not configure both shorthand and object arrays with overlapping names/keys; input validation rejects collisions.
+
 ### AWS and Google Cloud
 
 All AWS and GCP modules are also configured in their provider root `main.tf`. Each input variable is a list of objects with a stable `key`; use one item per independent resource. Dependencies can be supplied explicitly by IDs or through the supported `vpc_key`, `subnet_keys`, `instance_key`, and related reference fields in the root compositions. Database credentials are managed by AWS RDS Secrets Manager integration where supported. GCP monitoring credentials are supplied separately through the sensitive `gcp_monitoring_credentials` input.
