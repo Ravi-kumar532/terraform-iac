@@ -4,7 +4,6 @@ tenant_id = "REPLACE_WITH_TENANT_ID"
 subscription_id = "REPLACE_WITH_SUBSCRIPTION_ID"
 client_id = "REPLACE_WITH_GITHUB_OR_AZDO_OIDC_CLIENT_ID"
 common_tags = { ManagedBy = "Terraform", Environment = "dev", CostCentre = "REPLACE_WITH_COST_CENTRE" }
-azure_sql_server_credentials = {}
 
 azure_resource_group = [
   { key = "apps", name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION" }
