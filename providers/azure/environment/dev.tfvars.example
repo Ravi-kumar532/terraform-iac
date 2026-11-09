@@ -1,0 +1,45 @@
+# Copy to dev.tfvars (gitignored). Keep secrets in Azure Key Vault.
+environment = "dev"
+tenant_id = "REPLACE_WITH_TENANT_ID"
+subscription_id = "REPLACE_WITH_SUBSCRIPTION_ID"
+client_id = "REPLACE_WITH_GITHUB_OR_AZDO_OIDC_CLIENT_ID"
+common_tags = { ManagedBy = "Terraform", Environment = "dev", CostCentre = "REPLACE_WITH_COST_CENTRE" }
+azure_sql_server_credentials = {}
+
+azure_resource_group = [
+  { key = "apps", name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION" }
+]
+azure_app_service = [
+  { key = "web-plan", name = "REPLACE_WITH_DEV_APP_SERVICE_PLAN", resource_group_name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION", os_type = "Linux", sku_name = "P1v3" }
+]
+azure_key_vault = [
+  { key = "app-secrets", name = "REPLACE_WITH_GLOBALLY_UNIQUE_DEV_VAULT", resource_group_name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION", public_network_access_enabled = false, rbac_authorization_enabled = true }
+]
+azure_managed_identity = [
+  { key = "web-mi", name = "REPLACE_WITH_DEV_WEB_IDENTITY", resource_group_name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION", key_vaults = ["app-secrets"] }
+]
+azure_web_apps = [
+  { key = "web-one", name = "REPLACE_WITH_DEV_WEB_APP_ONE", resource_group_name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION", service_plan_key = "web-plan", user_assigned_identity_keys = ["web-mi"], key_vaults = ["app-secrets"], runtime = { node_version = "20-lts" }, app_settings = { APP_ENV = "dev", DB_PASSWORD = "@Microsoft.KeyVault(SecretUri=REPLACE_WITH_SECRET_URI)" } },
+  { key = "web-two", name = "REPLACE_WITH_DEV_WEB_APP_TWO", resource_group_name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION", service_plan_key = "web-plan", user_assigned_identity_keys = ["web-mi"], key_vaults = ["app-secrets"], runtime = { python_version = "3.12" } }
+]
+azure_sql_server = [
+  { key = "sql-primary", name = "REPLACE_WITH_DEV_SQL_SERVER", resource_group_name = "REPLACE_WITH_DEV_RESOURCE_GROUP", location = "REPLACE_WITH_AZURE_REGION", azuread_admin_login = "REPLACE_WITH_ENTRA_ADMIN_DISPLAY_NAME", azuread_admin_object_id = "REPLACE_WITH_ENTRA_ADMIN_OBJECT_ID", public_network_access_enabled = false }
+]
+azure_sql_database = [
+  { key = "orders-db", name = "orders", server_key = "sql-primary", sku_name = "GP_S_Gen5_2", zone_redundant = false },
+  { key = "billing-db", name = "billing", server_key = "sql-primary", sku_name = "GP_S_Gen5_2", zone_redundant = false }
+]
+
+# Add further resources by appending objects with unique keys. Do not use list indexes as identity.
+azure_acr = []
+azure_aks = []
+azure_app_configuration = []
+azure_event_grid = []
+azure_function_app = []
+azure_logic_app = []
+azure_monitoring = []
+azure_storage_account = []
+azure_subnet = []
+azure_vnet = []
+azure_service_bus_namespaces = []
+azure_private_endpoint = []
