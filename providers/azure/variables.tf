@@ -122,41 +122,100 @@ variable "azure_app_service" {
 }
 
 variable "azure_event_grid" {
-  description = "Array of event_grid module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of event_grid resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    public_network_access_enabled = optional(bool, false)
+    tags = optional(map(string), {})
+    publisher_principal_ids = optional(set(string), [])
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_event_grid : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_event_grid : try(item.key, "")])) == length(var.azure_event_grid)
+    condition = alltrue([for item in var.azure_event_grid : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_event_grid : item.key])) == length(var.azure_event_grid)
     error_message = "Each azure_event_grid item must have a unique non-empty key."
   }
 }
 
 variable "azure_function_app" {
-  description = "Array of function_app module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of function_app resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    tags = optional(map(string), {
+
+  })
+    service_plan_id = string
+    storage_account_name = string
+    python_version = optional(string, "3.11")
+    integration_subnet_id = optional(string, null)
+    public_network_access_enabled = optional(bool, false)
+    service_plan_key = optional(string)
+    storage_account_key = optional(string)
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_function_app : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_function_app : try(item.key, "")])) == length(var.azure_function_app)
+    condition = alltrue([for item in var.azure_function_app : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_function_app : item.key])) == length(var.azure_function_app)
     error_message = "Each azure_function_app item must have a unique non-empty key."
   }
 }
 
 variable "azure_key_vault" {
-  description = "Array of key_vault module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of key_vault resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    tenant_id = string
+    sku_name = optional(string, "standard")
+    rbac_authorization_enabled = optional(bool, true)
+    public_network_access_enabled = optional(bool, false)
+    soft_delete_retention_days = optional(number, 90)
+    access_policies = optional(map(object({
+    tenant_id               = string
+    object_id               = string
+    secret_permissions      = optional(list(string), ["Get", "List"])
+    key_permissions         = optional(list(string), [])
+    certificate_permissions = optional(list(string), [])
+    storage_permissions     = optional(list(string), [])
+  })), {})
+    role_assignments = optional(map(object({
+    principal_id         = string
+    role_definition_name = string
+    description          = optional(string)
+    principal_type       = optional(string)
+    skip_service_principal_aad_check = optional(bool, false)
+  })), {})
+    tags = optional(map(string), {})
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_key_vault : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_key_vault : try(item.key, "")])) == length(var.azure_key_vault)
+    condition = alltrue([for item in var.azure_key_vault : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_key_vault : item.key])) == length(var.azure_key_vault)
     error_message = "Each azure_key_vault item must have a unique non-empty key."
   }
 }
 
 variable "azure_logic_app" {
-  description = "Array of logic_app module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of logic_app resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    tags = optional(map(string), {
+
+  })
+    workflow_schema = string
+    workflow_version = optional(string, "1.0.0.0")
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_logic_app : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_logic_app : try(item.key, "")])) == length(var.azure_logic_app)
+    condition = alltrue([for item in var.azure_logic_app : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_logic_app : item.key])) == length(var.azure_logic_app)
     error_message = "Each azure_logic_app item must have a unique non-empty key."
   }
 }
