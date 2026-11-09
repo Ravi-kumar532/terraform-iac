@@ -1,0 +1,48 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    paths:
+      - "providers/**"
+      - "environments/**"
+      - "scripts/**"
+      - ".github/workflows/**"
+      - "azure-pipelines.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "providers/**"
+      - "environments/**"
+      - "scripts/**"
+      - ".github/workflows/**"
+      - "azure-pipelines.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format-and-validate:
+    name: Format and validate all provider modules and roots
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+          terraform_wrapper: false
+
+      - name: Verify Terraform formatting
+        run: terraform fmt -check -recursive
+
+      - name: Initialize and validate every module and provider composition root
+        run: bash scripts/terraform-validate.sh
