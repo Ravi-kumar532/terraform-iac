@@ -83,43 +83,43 @@ stages:
                       export ARM_CLIENT_ID="$servicePrincipalId"
                       export ARM_TENANT_ID="$tenantId"
                       export ARM_OIDC_TOKEN="$idToken"
-                      export ARM_SUBSCRIPTION_ID="$(AZURE_SUBSCRIPTION_ID)"
+                      export ARM_SUBSCRIPTION_ID="$AZURE_SUBSCRIPTION_ID"
                       export TF_IN_AUTOMATION=true
                       export TF_INPUT=false
                       export TF_VAR_environment="${{ parameters.environment }}"
                       export TF_VAR_tenant_id="$tenantId"
-                      export TF_VAR_subscription_id="$(AZURE_SUBSCRIPTION_ID)"
+                      export TF_VAR_subscription_id="$AZURE_SUBSCRIPTION_ID"
                       export TF_VAR_client_id="$servicePrincipalId"
 
-                      if [[ -z "$(TERRAFORM_INPUTS_JSON)" ]]; then
+                      if [[ -z "$TERRAFORM_INPUTS_JSON" ]]; then
                         echo "TERRAFORM_INPUTS_JSON must contain the non-secret module input arrays."
                         exit 1
                       fi
 
                       input_file="$AGENT_TEMPDIRECTORY/terraform.tfvars.json"
-                      printf '%s' "$(TERRAFORM_INPUTS_JSON)" > "$input_file"
+                      printf '%s' "$TERRAFORM_INPUTS_JSON" > "$input_file"
                       chmod 600 "$input_file"
                       jq -e 'type == "object"' "$input_file" >/dev/null
 
-                      if [[ -n "$(AZURE_SQL_CREDENTIALS_SECRET)" ]]; then
+                      if [[ -n "$AZURE_SQL_CREDENTIALS_SECRET" ]]; then
                         sql_credentials="$(az keyvault secret show \
-                          --vault-name "$(AZURE_SECRETS_VAULT)" \
-                          --name "$(AZURE_SQL_CREDENTIALS_SECRET)" \
+                          --vault-name "$AZURE_SECRETS_VAULT" \
+                          --name "$AZURE_SQL_CREDENTIALS_SECRET" \
                           --query value --output tsv)"
-                        echo "::add-mask::$sql_credentials"
+                        echo "##vso[task.setsecret]$sql_credentials"
                         export TF_VAR_azure_sql_server_credentials="$sql_credentials"
                       fi
 
                       terraform -chdir=providers/azure init -input=false \
-                        -backend-config="resource_group_name=$(TFSTATE_RESOURCE_GROUP)" \
-                        -backend-config="storage_account_name=$(TFSTATE_STORAGE_ACCOUNT)" \
-                        -backend-config="container_name=$(TFSTATE_CONTAINER)" \
+                        -backend-config="resource_group_name=$TFSTATE_RESOURCE_GROUP" \
+                        -backend-config="storage_account_name=$TFSTATE_STORAGE_ACCOUNT" \
+                        -backend-config="container_name=$TFSTATE_CONTAINER" \
                         -backend-config="key=${{ parameters.environment }}/terraform.tfstate" \
                         -backend-config="use_oidc=true" \
                         -backend-config="use_azuread_auth=true" \
                         -backend-config="tenant_id=$tenantId" \
                         -backend-config="client_id=$servicePrincipalId" \
-                        -backend-config="subscription_id=$(AZURE_SUBSCRIPTION_ID)"
+                        -backend-config="subscription_id=$AZURE_SUBSCRIPTION_ID"
 
                       terraform -chdir=providers/azure validate -no-color
                       terraform -chdir=providers/azure plan -input=false -no-color \
