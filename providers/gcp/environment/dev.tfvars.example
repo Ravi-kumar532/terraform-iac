@@ -3,7 +3,6 @@ environment = "dev"
 project_id = "REPLACE_WITH_GCP_PROJECT_ID"
 region = "REPLACE_WITH_GCP_REGION"
 common_labels = { managed_by = "terraform", environment = "dev" }
-gcp_monitoring_credentials = {}
 gcp_app_engine = []
 gcp_artifact_registry = []
 gcp_cloud_functions = []
