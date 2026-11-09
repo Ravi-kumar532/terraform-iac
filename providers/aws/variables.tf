@@ -350,7 +350,7 @@ variable "aws_subnet" {
   }))
   default = []
   validation {
-    condition = alltrue([for item in var.aws_subnet : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.aws_subnet : item.key] && alltrue([for item in var.aws_subnet : item.vpc_id != null || (item.vpc_key != null && contains([for vpc in var.aws_vpc : vpc.key], item.vpc_key))]))) == length(var.aws_subnet)
+    condition = alltrue([for item in var.aws_subnet : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.aws_subnet : item.key] && alltrue([for item in var.aws_subnet : item.vpc_id != null || (item.vpc_key != null && try(contains([for vpc in var.aws_vpc : vpc.key], item.vpc_key), false))]))) == length(var.aws_subnet)
     error_message = "Each aws_subnet item must have a unique non-empty key."
   }
 }
