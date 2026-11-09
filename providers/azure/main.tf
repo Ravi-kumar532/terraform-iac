@@ -12,6 +12,8 @@ locals {
         public_network_access_enabled = app.public_network_access_enabled
         integration_subnet_id         = app.integration_subnet_id
         identity_ids                  = concat(app.identity_ids, [for identity_key in app.user_assigned_identity_keys : module.azure_managed_identity[identity_key].id])
+        key_vaults                    = app.key_vaults
+        key_vault_role                = app.key_vault_role
         app_settings                  = app.app_settings
         tags                          = merge(local.azure_common_tags, app.tags)
         runtime                       = app.runtime
@@ -28,6 +30,8 @@ locals {
         public_network_access_enabled = var.azure_web_app_defaults.public_network_access_enabled
         integration_subnet_id         = var.azure_web_app_defaults.integration_subnet_id
         identity_ids                  = concat(var.azure_web_app_defaults.identity_ids, [for identity_key in var.azure_web_app_defaults.user_assigned_identity_keys : module.azure_managed_identity[identity_key].id])
+        key_vaults                    = var.azure_web_app_defaults.key_vaults
+        key_vault_role                = var.azure_web_app_defaults.key_vault_role
         app_settings                  = var.azure_web_app_defaults.app_settings
         tags                          = merge(local.azure_common_tags, var.azure_web_app_defaults.tags)
         runtime                       = var.azure_web_app_defaults.runtime
@@ -151,11 +155,11 @@ module "azure_key_vault" {
   role_assignments = merge(
     try(each.value.role_assignments, {}),
     {
-      for app in var.azure_web_apps : "${app.name}-system-secrets-user" => {
+      for app in local.azure_web_app_definitions : "${app.key}-system-secrets-user" => {
         principal_id         = module.azure_web_apps.identity_principal_ids[app.key]
-        role_definition_name = try(app.key_vault_role, "Key Vault Secrets User")
+        role_definition_name = app.key_vault_role
       }
-      if contains(try(app.key_vaults, []), each.key)
+      if contains(app.key_vaults, each.key)
     },
     {
       for identity in var.azure_managed_identity : "${identity.key}-secrets-user" => {
