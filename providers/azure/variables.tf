@@ -337,21 +337,38 @@ variable "azure_storage_account" {
 }
 
 variable "azure_subnet" {
-  description = "Array of subnet module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of subnet resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    virtual_network_name = string
+    address_prefixes = list(string)
+    service_endpoints = optional(list(string), [])
+    vnet_key = optional(string)
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_subnet : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_subnet : try(item.key, "")])) == length(var.azure_subnet)
+    condition = alltrue([for item in var.azure_subnet : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_subnet : item.key])) == length(var.azure_subnet)
     error_message = "Each azure_subnet item must have a unique non-empty key."
   }
 }
 
 variable "azure_vnet" {
-  description = "Array of vnet module instances. Each object requires a stable unique key plus the child module inputs."
-  type = list(any)
+  description = "Typed list of vnet resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    tags = optional(map(string), {
+
+  })
+    address_space = list(string)
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_vnet : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_vnet : try(item.key, "")])) == length(var.azure_vnet)
+    condition = alltrue([for item in var.azure_vnet : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_vnet : item.key])) == length(var.azure_vnet)
     error_message = "Each azure_vnet item must have a unique non-empty key."
   }
 }
@@ -409,21 +426,39 @@ variable "azure_service_bus_namespaces" {
 }
 
 variable "azure_managed_identity" {
-  description = "Array of user-assigned managed identities. key_vaults lists Azure Key Vault input keys that should grant this identity access."
-  type = list(any)
+  description = "Typed list of managed_identity resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    tags = optional(map(string), {})
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_managed_identity : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_managed_identity : try(item.key, "")])) == length(var.azure_managed_identity)
-    error_message = "Each managed identity item must have a unique non-empty key."
+    condition = alltrue([for item in var.azure_managed_identity : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_managed_identity : item.key])) == length(var.azure_managed_identity)
+    error_message = "Each azure_managed_identity item must have a unique non-empty key."
   }
 }
 
 variable "azure_private_endpoint" {
-  description = "Array of private endpoints. Supply target resource IDs, endpoint subnet IDs, subresource names, and private DNS zone IDs."
-  type = list(any)
+  description = "Typed list of private_endpoint resources. Each object has a stable key for Terraform state identity."
+  type = list(object({
+    key = string
+    name = string
+    resource_group_name = string
+    location = string
+    subnet_id = string
+    private_connection_resource_id = string
+    subresource_names = list(string)
+    is_manual_connection = optional(bool, false)
+    request_message = optional(string, null)
+    private_dns_zone_ids = optional(list(string), [])
+    tags = optional(map(string), {})
+  }))
   default = []
   validation {
-    condition = alltrue([for item in var.azure_private_endpoint : try(length(trimspace(item.key)) > 0, false)]) && length(distinct([for item in var.azure_private_endpoint : try(item.key, "")])) == length(var.azure_private_endpoint)
-    error_message = "Each private endpoint item must have a unique non-empty key."
+    condition = alltrue([for item in var.azure_private_endpoint : length(trimspace(item.key)) > 0]) && length(distinct([for item in var.azure_private_endpoint : item.key])) == length(var.azure_private_endpoint)
+    error_message = "Each azure_private_endpoint item must have a unique non-empty key."
   }
 }
