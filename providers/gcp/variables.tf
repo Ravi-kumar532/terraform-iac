@@ -161,7 +161,7 @@ variable "gcp_cloud_sql_database" {
     key = string
     project_id = optional(string, null)
     name = string
-    instance_name = optional(string, null)
+    instance_name = optional(string)
     charset = optional(string, null)
     collation = optional(string, null)
     instance_key = optional(string)
@@ -243,8 +243,8 @@ variable "gcp_gke" {
     project_id = optional(string, null)
     name = string
     region = optional(string, null)
-    network_self_link = optional(string, null)
-    subnetwork_self_link = optional(string, null)
+    network_self_link = optional(string)
+    subnetwork_self_link = optional(string)
     pods_range_name = string
     services_range_name = string
     private_endpoint = optional(bool, true)
@@ -346,7 +346,7 @@ variable "gcp_subnet" {
     project_id = optional(string, null)
     name = string
     region = optional(string, null)
-    network_self_link = optional(string, null)
+    network_self_link = optional(string)
     ip_cidr_range = string
     purpose = optional(string, null)
     secondary_ip_ranges = optional(list(object({
