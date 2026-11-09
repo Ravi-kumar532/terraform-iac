@@ -10,7 +10,7 @@ export TF_IN_AUTOMATION=1
 export TF_PLUGIN_CACHE_DIR="$validation_root/plugin-cache"
 mkdir -p "$TF_PLUGIN_CACHE_DIR"
 
-for config in "$validation_root"/providers/*/bootstrap "$validation_root"/providers/*/module/*; do
+for config in "$validation_root"/providers/* "$validation_root"/providers/*/bootstrap "$validation_root"/providers/*/module/*; do
   if [[ ! -d "$config" ]] || ! compgen -G "$config/*.tf" >/dev/null; then
     continue
   fi
