@@ -1,7 +1,22 @@
-variable "environment" { type = string; validation { condition = contains(["dev","qa","staging","prod"], var.environment) error_message = "environment must be dev, qa, staging, or prod." } }
-variable "project_id" { type = string; description = "Google Cloud project ID." }
-variable "region" { type = string; description = "Default Google Cloud region." }
-variable "common_labels" { type = map(string); default = {} }
+variable "environment" {
+  type = string
+  validation {
+    condition = contains(["dev", "qa", "staging", "prod"], var.environment)
+    error_message = "environment must be dev, qa, staging, or prod."
+  }
+}
+variable "project_id" {
+  type = string
+  description = "Google Cloud project ID."
+}
+variable "region" {
+  type = string
+  description = "Default Google Cloud region."
+}
+variable "common_labels" {
+  type = map(string)
+  default = {}
+}
 variable "gcp_monitoring_credentials" {
   description = "Grafana credentials injected from a secret manager at deployment time; never commit values."
   type = map(object({ database_password = string, admin_password = string }))
