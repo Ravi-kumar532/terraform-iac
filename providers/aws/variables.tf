@@ -1,6 +1,18 @@
-variable "environment" { type = string; validation { condition = contains(["dev","qa","staging","prod"], var.environment) error_message = "environment must be dev, qa, staging, or prod." } }
-variable "region" { type = string; description = "AWS deployment region supplied by the environment." }
-variable "common_tags" { type = map(string); default = {} }
+variable "environment" {
+  type = string
+  validation {
+    condition = contains(["dev", "qa", "staging", "prod"], var.environment)
+    error_message = "environment must be dev, qa, staging, or prod."
+  }
+}
+variable "region" {
+  type = string
+  description = "AWS deployment region supplied by the environment."
+}
+variable "common_tags" {
+  type = map(string)
+  default = {}
+}
 
 variable "aws_app_runner" {
   description = "Array of app_runner module instances; each item requires a unique stable key and module inputs."
