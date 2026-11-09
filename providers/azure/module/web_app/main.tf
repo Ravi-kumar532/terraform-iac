@@ -22,6 +22,10 @@ resource "azurerm_linux_web_app" "this" {
     identity_ids = each.value.identity_ids
   }
 
+  lifecycle {
+    prevent_destroy = each.value.prevent_destroy
+  }
+
   site_config {
     minimum_tls_version = "1.2"
     ftps_state          = "Disabled"
