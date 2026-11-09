@@ -19,3 +19,12 @@ for config in "$validation_root"/providers/* "$validation_root"/providers/*/boot
   terraform -chdir="$config" init -backend=false -input=false -no-color
   terraform -chdir="$config" validate -no-color
 done
+
+# Validate the HCL syntax and formatting of checked-in environment examples.
+for example in "$repo_root"/providers/*/environment/*.tfvars.example; do
+  [[ -f "$example" ]] || continue
+  temporary_tfvars="$validation_root/$(basename "${example%.example}")"
+  cp "$example" "$temporary_tfvars"
+  echo "Formatting ${example#"$repo_root"/}"
+  terraform fmt -check "$temporary_tfvars"
+done
