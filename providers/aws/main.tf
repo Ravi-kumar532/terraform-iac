@@ -49,7 +49,7 @@ module "aws_eks" {
   name = try(each.value.name, null)
   cluster_role_arn = try(each.value.cluster_role_arn, null)
   kubernetes_version = try(each.value.kubernetes_version, null)
-  subnet_ids = coalesce(try(each.value.subnet_ids, null), try([for key in each.value.subnet_keys : module.aws_subnet[key].id], []))
+  subnet_ids = try(length(each.value.subnet_ids) > 0, false) ? each.value.subnet_ids : try([for key in each.value.subnet_keys : module.aws_subnet[key].id], [])
   endpoint_public_access = try(each.value.endpoint_public_access, null)
   security_group_ids = try(each.value.security_group_ids, null)
   kms_key_arn = try(each.value.kms_key_arn, null)
@@ -129,7 +129,7 @@ module "aws_rds_mysql" {
   kms_key_arn = try(each.value.kms_key_arn, null)
   multi_az = try(each.value.multi_az, null)
   backup_retention_days = try(each.value.backup_retention_days, null)
-  subnet_ids = coalesce(try(each.value.subnet_ids, null), try([for key in each.value.subnet_keys : module.aws_subnet[key].id], []))
+  subnet_ids = try(length(each.value.subnet_ids) > 0, false) ? each.value.subnet_ids : try([for key in each.value.subnet_keys : module.aws_subnet[key].id], [])
   security_group_ids = try(each.value.security_group_ids, null)
 }
 
@@ -145,7 +145,7 @@ module "aws_rds_sql_server" {
   kms_key_arn = try(each.value.kms_key_arn, null)
   multi_az = try(each.value.multi_az, null)
   backup_retention_days = try(each.value.backup_retention_days, null)
-  subnet_ids = coalesce(try(each.value.subnet_ids, null), try([for key in each.value.subnet_keys : module.aws_subnet[key].id], []))
+  subnet_ids = try(length(each.value.subnet_ids) > 0, false) ? each.value.subnet_ids : try([for key in each.value.subnet_keys : module.aws_subnet[key].id], [])
   security_group_ids = try(each.value.security_group_ids, null)
 }
 
