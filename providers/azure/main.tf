@@ -13,6 +13,7 @@ locals {
       app_settings                  = try(app.app_settings, {})
       tags                          = merge(local.azure_common_tags, try(app.tags, {}))
       runtime                       = try(app.runtime, {})
+      prevent_destroy               = try(app.prevent_destroy, true)
     }
   ]
 }
@@ -167,6 +168,7 @@ module "azure_sql_database" {
   storage_account_type = try(each.value.storage_account_type, null)
   min_capacity = try(each.value.min_capacity, null)
   backup_retention_days = try(each.value.backup_retention_days, null)
+  prevent_destroy = try(each.value.prevent_destroy, true)
   tags = merge(local.azure_common_tags, try(each.value.tags, {}))
 }
 
@@ -184,6 +186,7 @@ module "azure_sql_server" {
   azuread_admin_object_id = try(each.value.azuread_admin_object_id, null)
   tenant_id = try(each.value.tenant_id, var.tenant_id)
   public_network_access_enabled = try(each.value.public_network_access_enabled, null)
+  prevent_destroy = try(each.value.prevent_destroy, true)
 }
 
 module "azure_storage_account" {
